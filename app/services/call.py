@@ -2,6 +2,7 @@ from app.models.calls import Call
 from app.repositories.call import CallRepository
 from app.services.base_service import BaseService
 from app.utils.storage import save_audio
+from app.workers.tasks import process_call
 
 
 class CallService(BaseService[Call, CallRepository]):
@@ -26,4 +27,8 @@ class CallService(BaseService[Call, CallRepository]):
             operator_id=operator_id,
             external_id=external_id,
         )
-        return await self.repo.create(call)
+        call = await self.repo.create(call)
+        await self.session.commit()
+
+        process_call.delay(call.id)
+        return call

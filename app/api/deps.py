@@ -7,4 +7,4 @@ from app.services.call import CallService
 
 
 def get_call_service(session: AsyncSession = Depends(get_session)) -> CallService:
-    return CallService(repo=CallRepository(session))
+    return CallService(repo=CallRepository(session), session=session)

@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 from typing import Any, Generic, TypeVar
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.db import Base
 from app.exceptions import EntityNotFound
 from app.repositories.base_repository import SqlalchemyAsyncRepository
@@ -13,8 +15,9 @@ RepoT = TypeVar("RepoT", bound=SqlalchemyAsyncRepository)
 class BaseService(IService[ModelT], Generic[ModelT, RepoT]):
     entity_name: str
 
-    def __init__(self, repo: RepoT) -> None:
+    def __init__(self, repo: RepoT, session: AsyncSession) -> None:
         self.repo = repo
+        self.session = session
 
     async def get(self, obj_id: int) -> ModelT | None:
         return await self.repo.get(obj_id)
@@ -36,3 +39,4 @@ class BaseService(IService[ModelT], Generic[ModelT, RepoT]):
     async def delete(self, obj_id: int) -> None:
         obj = await self.get_or_404(obj_id)
         await self.repo.delete(obj)
+        await self.session.commit()
