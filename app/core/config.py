@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     redis_url: str
     rabbitmq_url: str
 
+    db_echo: bool = False
+    log_level: str = "INFO"
+
     storage_dir: str = "storage"
 
     groq_api_key: str = ""

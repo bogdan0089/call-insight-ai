@@ -4,7 +4,6 @@ from typing import Any, Generic, TypeVar
 
 from app.core.db import Base
 
-
 ModelT = TypeVar("ModelT", bound=Base)
 
 
