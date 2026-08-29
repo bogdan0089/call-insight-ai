@@ -5,7 +5,6 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 
-
 ALLOWED_SUFFIXES = {".mp3", ".wav", ".m4a", ".ogg"}
 
 
