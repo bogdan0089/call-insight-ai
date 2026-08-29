@@ -1,0 +1,95 @@
+import asyncio
+
+from celery.utils.log import get_task_logger
+
+from app.core.db import async_session
+from app.fixtures.dialogues import DIALOGUES
+from app.models.calls import CallStatus
+from app.models.transcripts import Transcript, TranscriptSegment
+from app.repositories.call import CallRepository
+from app.repositories.transcript import TranscriptRepository
+from app.workers.celery_app import celery_app
+
+logger = get_task_logger(__name__)
+
+SEGMENT_MS = 4000
+
+
+@celery_app.task(name="process_call", bind=True, max_retries=3)
+def process_call(self, call_id: int) -> None:
+    try:
+        asyncio.run(_process_call(call_id))
+    except Exception as exc:
+        logger.exception("call %s failed", call_id)
+        asyncio.run(_mark_failed(call_id, str(exc)))
+        raise self.retry(exc=exc, countdown=30) from exc
+
+
+async def _process_call(call_id: int) -> None:
+    async with async_session() as session:
+        call_repo = CallRepository(session)
+        transcript_repo = TranscriptRepository(session)
+
+        call = await call_repo.get(call_id)
+        if call is None:
+            logger.warning("call %s not found", call_id)
+            return
+
+        if call.status == CallStatus.DONE:
+            logger.info("call %s already processed", call_id)
+            return
+
+        call.status = CallStatus.TRANSCRIBING
+        call.error = None
+        await session.commit()
+
+        existing = await transcript_repo.get_by_call_id(call_id)
+        if existing is None:
+            transcript = _build_transcript(call_id)
+            await transcript_repo.create(transcript)
+            logger.info("call %s transcribed into %s segments", call_id, len(transcript.segments))
+
+        call.status = CallStatus.DONE
+        call.duration_sec = _duration(call_id)
+        await session.commit()
+
+
+def _build_transcript(call_id: int) -> Transcript:
+    dialogue = DIALOGUES[call_id % len(DIALOGUES)]
+
+    segments = [
+        TranscriptSegment(
+            idx=idx,
+            speaker=speaker,
+            start_ms=idx * SEGMENT_MS,
+            end_ms=(idx + 1) * SEGMENT_MS,
+            text=text,
+        )
+        for idx, (speaker, text) in enumerate(dialogue["segments"])
+    ]
+
+    return Transcript(
+        call_id=call_id,
+        text="\n".join(f"{speaker.value}: {text}" for speaker, text in dialogue["segments"]),
+        language="uk",
+        model="fixture",
+        segments=segments,
+    )
+
+
+def _duration(call_id: int) -> int:
+    dialogue = DIALOGUES[call_id % len(DIALOGUES)]
+    return len(dialogue["segments"]) * SEGMENT_MS // 1000
+
+
+async def _mark_failed(call_id: int, error: str) -> None:
+    async with async_session() as session:
+        repo = CallRepository(session)
+
+        call = await repo.get(call_id)
+        if call is None:
+            return
+
+        call.status = CallStatus.FAILED
+        call.error = error[:1000]
+        await session.commit()
