@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     groq_api_key: str = ""
     anthropic_api_key: str = ""
+    voyage_api_key: str = ""
 
     llm_model: str = "claude-opus-5"
     llm_max_tokens: int = 4000

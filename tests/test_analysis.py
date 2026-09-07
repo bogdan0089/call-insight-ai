@@ -22,7 +22,7 @@ class StubAnalyzer:
     def __init__(self, verdicts: list[ItemVerdict]) -> None:
         self.verdicts = verdicts
 
-    async def analyze(self, transcript, items) -> AnalysisResult:
+    async def analyze(self, transcript, items, examples=()) -> AnalysisResult:
         return AnalysisResult(
             analysis=CallAnalysis(items=self.verdicts),
             model="stub",
