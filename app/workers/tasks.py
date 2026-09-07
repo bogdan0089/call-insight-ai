@@ -5,12 +5,14 @@ from celery.utils.log import get_task_logger
 from app.core.config import settings
 from app.core.db import async_session
 from app.fixtures.dialogues import DIALOGUES
+from app.integrations.embeddings.client import build_embedder
 from app.integrations.llm.client import AnthropicAnalyzer, FakeAnalyzer, LLMAnalyzer
 from app.models.calls import CallStatus
 from app.models.transcripts import Transcript, TranscriptSegment
 from app.repositories.call import CallRepository
 from app.repositories.transcript import TranscriptRepository
 from app.services.analysis import AnalysisService
+from app.services.embedding import EmbeddingService
 from app.workers.celery_app import celery_app
 
 logger = get_task_logger(__name__)
@@ -60,6 +62,9 @@ async def _process_call(call_id: int) -> None:
             transcript = _build_transcript(call_id)
             await transcript_repo.create(transcript)
             logger.info("call %s transcribed into %s segments", call_id, len(transcript.segments))
+
+        embedding = EmbeddingService(session=session, embedder=build_embedder())
+        await embedding.embed_transcript(call_id)
 
         call.status = CallStatus.ANALYZING
         await session.commit()
