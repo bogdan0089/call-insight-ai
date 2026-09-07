@@ -34,16 +34,20 @@ class StubAnalyzer:
 
 @pytest.fixture
 async def session() -> AsyncGenerator[AsyncSession]:
-    created: list[int] = []
+    calls: list[int] = []
+    items: list[int] = []
 
     async with async_session() as session:
-        session.info["created_calls"] = created
+        session.info["created_calls"] = calls
+        session.info["created_items"] = items
         yield session
 
         await session.rollback()
-        if created:
-            await session.execute(delete(Call).where(Call.id.in_(created)))
-            await session.commit()
+        if calls:
+            await session.execute(delete(Call).where(Call.id.in_(calls)))
+        if items:
+            await session.execute(delete(ChecklistItem).where(ChecklistItem.id.in_(items)))
+        await session.commit()
 
 
 async def make_checklist(session: AsyncSession) -> dict[str, ChecklistItem]:
@@ -60,6 +64,7 @@ async def make_checklist(session: AsyncSession) -> dict[str, ChecklistItem]:
     }
     session.add_all(list(items.values()))
     await session.flush()
+    session.info["created_items"].extend(item.id for item in items.values())
     return items
 
 
