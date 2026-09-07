@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.integrations.llm.prompt import SYSTEM_PROMPT, build_user_prompt
 from app.models.checklist import ChecklistItem
 from app.schemas.input.llm import CallAnalysis, ItemVerdict
+from app.schemas.input.rag import ScoredExample
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class LLMAnalyzer(Protocol):
         self,
         transcript: str,
         items: Sequence[ChecklistItem],
+        examples: Sequence[ScoredExample] = (),
     ) -> AnalysisResult: ...
 
 
@@ -46,8 +48,9 @@ class AnthropicAnalyzer:
         self,
         transcript: str,
         items: Sequence[ChecklistItem],
+        examples: Sequence[ScoredExample] = (),
     ) -> AnalysisResult:
-        prompt = build_user_prompt(transcript, items)
+        prompt = build_user_prompt(transcript, items, examples)
 
         response = await self.client.messages.parse(
             model=settings.llm_model,
@@ -69,12 +72,16 @@ class AnthropicAnalyzer:
 class FakeAnalyzer:
     def __init__(self, passed_codes: Sequence[str]) -> None:
         self.passed_codes = set(passed_codes)
+        self.last_examples: list[ScoredExample] = []
 
     async def analyze(
         self,
         transcript: str,
         items: Sequence[ChecklistItem],
+        examples: Sequence[ScoredExample] = (),
     ) -> AnalysisResult:
+        self.last_examples = list(examples)
+
         verdicts = [
             ItemVerdict(
                 code=item.code,

@@ -69,13 +69,18 @@ async def _process_call(call_id: int) -> None:
         call.status = CallStatus.ANALYZING
         await session.commit()
 
-        analysis = AnalysisService(session=session, analyzer=build_analyzer(call_id))
+        analysis = AnalysisService(
+            session=session,
+            analyzer=build_analyzer(call_id),
+            embeddings=embedding,
+        )
         outcome = await analysis.analyze_call(call_id)
         logger.info(
-            "call %s scored %s, failed required: %s, tokens %s/%s, cost $%.4f",
+            "call %s scored %s, failed required: %s, examples %s, tokens %s/%s, cost $%.4f",
             call_id,
             outcome.total_score,
             outcome.failed_required or "none",
+            outcome.examples_used,
             outcome.input_tokens,
             outcome.output_tokens,
             outcome.cost_usd,

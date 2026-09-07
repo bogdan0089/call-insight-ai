@@ -15,6 +15,7 @@ from app.repositories.call import CallRepository
 from app.repositories.checklist import ChecklistRepository
 from app.repositories.score import CallScoreRepository
 from app.repositories.transcript import TranscriptRepository
+from app.services.embedding import EmbeddingService
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +32,19 @@ class AnalysisOutcome:
     input_tokens: int
     output_tokens: int
     cost_usd: float
+    examples_used: int
 
 
 class AnalysisService:
-    def __init__(self, session: AsyncSession, analyzer: LLMAnalyzer) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        analyzer: LLMAnalyzer,
+        embeddings: EmbeddingService | None = None,
+    ) -> None:
         self.session = session
         self.analyzer = analyzer
+        self.embeddings = embeddings
         self.calls = CallRepository(session)
         self.checklist = ChecklistRepository(session)
         self.transcripts = TranscriptRepository(session)
@@ -53,7 +61,9 @@ class AnalysisService:
             raise EntityNotFound(entity="Transcript", call_id=call_id)
 
         items = await self.checklist.get_active()
-        result = await self.analyzer.analyze(transcript.text, items)
+
+        examples = await self.embeddings.find_examples(call_id) if self.embeddings else []
+        result = await self.analyzer.analyze(transcript.text, items, examples)
 
         await self.raw.create(
             RawAIResponse(
@@ -115,6 +125,7 @@ class AnalysisService:
             input_tokens=result.input_tokens,
             output_tokens=result.output_tokens,
             cost_usd=result.cost_usd,
+            examples_used=len(examples),
         )
 
     @staticmethod
