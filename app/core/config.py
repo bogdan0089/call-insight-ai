@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     anthropic_api_key: str = ""
 
+    llm_model: str = "claude-opus-5"
+    llm_max_tokens: int = 4000
+    llm_timeout_seconds: float = 60.0
+    llm_max_retries: int = 3
+    llm_input_price_per_mtok: float = 5.0
+    llm_output_price_per_mtok: float = 25.0
+
     telephony_webhook_secret: str = "dev-secret"
 
     jwt_secret: str = "dev-jwt-secret"

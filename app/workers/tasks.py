@@ -2,17 +2,29 @@ import asyncio
 
 from celery.utils.log import get_task_logger
 
+from app.core.config import settings
 from app.core.db import async_session
 from app.fixtures.dialogues import DIALOGUES
+from app.integrations.llm.client import AnthropicAnalyzer, FakeAnalyzer, LLMAnalyzer
 from app.models.calls import CallStatus
 from app.models.transcripts import Transcript, TranscriptSegment
 from app.repositories.call import CallRepository
 from app.repositories.transcript import TranscriptRepository
+from app.services.analysis import AnalysisService
 from app.workers.celery_app import celery_app
 
 logger = get_task_logger(__name__)
 
 SEGMENT_MS = 4000
+
+
+def build_analyzer(call_id: int) -> LLMAnalyzer:
+    if settings.anthropic_api_key:
+        return AnthropicAnalyzer()
+
+    dialogue = DIALOGUES[call_id % len(DIALOGUES)]
+    logger.warning("no anthropic key, using FakeAnalyzer for call %s", call_id)
+    return FakeAnalyzer(dialogue["expected_passed"])
 
 
 @celery_app.task(name="process_call", bind=True, max_retries=3)
@@ -48,6 +60,21 @@ async def _process_call(call_id: int) -> None:
             transcript = _build_transcript(call_id)
             await transcript_repo.create(transcript)
             logger.info("call %s transcribed into %s segments", call_id, len(transcript.segments))
+
+        call.status = CallStatus.ANALYZING
+        await session.commit()
+
+        analysis = AnalysisService(session=session, analyzer=build_analyzer(call_id))
+        outcome = await analysis.analyze_call(call_id)
+        logger.info(
+            "call %s scored %s, failed required: %s, tokens %s/%s, cost $%.4f",
+            call_id,
+            outcome.total_score,
+            outcome.failed_required or "none",
+            outcome.input_tokens,
+            outcome.output_tokens,
+            outcome.cost_usd,
+        )
 
         call.status = CallStatus.DONE
         call.duration_sec = _duration(call_id)
