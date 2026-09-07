@@ -5,5 +5,6 @@ __pycache__/
 .ruff_cache/
 .env
 storage/
+sample.mp3
 .idea/
 .vscode/
