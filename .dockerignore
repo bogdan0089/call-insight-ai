@@ -3,8 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
-.env
+.git/
+.github/
 storage/
-sample.mp3
-.idea/
-.vscode/
+.env

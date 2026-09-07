@@ -9,6 +9,7 @@ from sqlalchemy import (
     Numeric,
     Text,
     UniqueConstraint,
+    false,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -40,6 +41,11 @@ class CallScore(Base):
     quote: Mapped[str | None] = mapped_column(Text, default=None)
     quote_start_ms: Mapped[int | None] = mapped_column(default=None)
     confidence: Mapped[Decimal | None] = mapped_column(Numeric(3, 2), default=None)
+    is_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default=false(),
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

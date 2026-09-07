@@ -8,10 +8,21 @@ class Settings(BaseSettings):
     redis_url: str
     rabbitmq_url: str
 
+    db_echo: bool = False
+    log_level: str = "INFO"
+
     storage_dir: str = "storage"
 
     groq_api_key: str = ""
     anthropic_api_key: str = ""
+    voyage_api_key: str = ""
+
+    llm_model: str = "claude-opus-5"
+    llm_max_tokens: int = 4000
+    llm_timeout_seconds: float = 60.0
+    llm_max_retries: int = 3
+    llm_input_price_per_mtok: float = 5.0
+    llm_output_price_per_mtok: float = 25.0
 
     telephony_webhook_secret: str = "dev-secret"
 

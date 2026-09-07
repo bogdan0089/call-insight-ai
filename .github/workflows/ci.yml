@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: lab
+          POSTGRES_PASSWORD: lab
+          POSTGRES_DB: radar
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U lab -d radar"
+          --health-interval 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://lab:lab@localhost:5434/radar
+      REDIS_URL: redis://localhost:6379/0
+      RABBITMQ_URL: amqp://lab:lab@localhost:5672//
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check app tests
+
+      - name: Migrate
+        run: alembic upgrade head
+
+      - name: Test
+        run: pytest -q

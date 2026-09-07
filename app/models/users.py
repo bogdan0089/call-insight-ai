@@ -1,13 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Boolean, DateTime, Enum, String, func
- 
 import enum
 from datetime import datetime
-
-from app.core.db import Base
-
 from typing import TYPE_CHECKING
 
+from sqlalchemy import Boolean, DateTime, Enum, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.db import Base
 
 if TYPE_CHECKING:
     from app.models.calls import Call
