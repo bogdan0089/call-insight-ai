@@ -1,9 +1,11 @@
 import asyncio
+from collections.abc import Coroutine
+from typing import Any
 
 from celery.utils.log import get_task_logger
 
 from app.core.config import settings
-from app.core.db import async_session
+from app.core.db import async_session, engine
 from app.fixtures.dialogues import DIALOGUES
 from app.integrations.embeddings.client import build_embedder
 from app.integrations.llm.client import AnthropicAnalyzer, FakeAnalyzer, LLMAnalyzer
@@ -29,13 +31,25 @@ def build_analyzer(call_id: int) -> LLMAnalyzer:
     return FakeAnalyzer(dialogue["expected_passed"])
 
 
+def run_task(coro: Coroutine[Any, Any, None]) -> None:
+    """Кожна задача працює у власному event loop, тому пул зʼєднань не переживає її."""
+
+    async def runner() -> None:
+        try:
+            await coro
+        finally:
+            await engine.dispose()
+
+    asyncio.run(runner())
+
+
 @celery_app.task(name="process_call", bind=True, max_retries=3)
 def process_call(self, call_id: int) -> None:
     try:
-        asyncio.run(_process_call(call_id))
+        run_task(_process_call(call_id))
     except Exception as exc:
         logger.exception("call %s failed", call_id)
-        asyncio.run(_mark_failed(call_id, str(exc)))
+        run_task(_mark_failed(call_id, str(exc)))
         raise self.retry(exc=exc, countdown=30) from exc
 
 
