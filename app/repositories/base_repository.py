@@ -62,11 +62,12 @@ class SqlalchemyAsyncRepository(IAsyncRepository[ModelT], Generic[ModelT]):
         try:
             await self.session.flush()
         except IntegrityError as exc:
-            message = str(exc.orig).lower()
+            detail = str(exc.orig).splitlines()[0]
+            message = detail.lower()
             if "unique" in message:
-                raise AlreadyExistsError() from exc
+                raise AlreadyExistsError(constraint=detail) from exc
             if "foreign key" in message:
-                raise ForeignKeyViolationError() from exc
+                raise ForeignKeyViolationError(constraint=detail) from exc
             raise DatabaseError(exc=exc) from exc
         except SQLAlchemyError as exc:
             raise DatabaseError(exc=exc) from exc
