@@ -37,3 +37,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     calls: Mapped[list["Call"]] = relationship(back_populates="operator")
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"

@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -26,6 +26,9 @@ class CallStatus(str, enum.Enum):
 
 class Call(Base):
     __tablename__ = "calls"
+    __table_args__ = (
+        Index("ix_calls_operator_created", "operator_id", "created_at", "id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     external_id: Mapped[str | None] = mapped_column(String(128), unique=True, index=True)
@@ -75,5 +78,7 @@ class Call(Base):
         cascade="all, delete-orphan"
     )
 
-
-
+    @property
+    def operator_name(self) -> str | None:
+        operator = self.__dict__.get("operator")
+        return operator.full_name if operator is not None else None
