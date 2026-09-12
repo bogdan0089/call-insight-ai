@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import ColumnElement, Row, and_, func, select
+from sqlalchemy import ColumnElement, Row, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -95,10 +95,7 @@ class StatsRepository:
                 passed.label("passed"),
             )
             .join(CallScore, CallScore.checklist_item_id == ChecklistItem.id)
-            .join(
-                Call,
-                and_(Call.id == CallScore.call_id),
-            )
+            .join(Call, Call.id == CallScore.call_id)
             .where(*self._call_conditions(operator_id, created_from, created_to))
             .group_by(ChecklistItem.id)
             .order_by((passed * 1.0 / func.nullif(scored, 0)).asc().nullslast())
