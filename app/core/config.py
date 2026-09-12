@@ -13,6 +13,8 @@ class Settings(BaseSettings):
 
     storage_dir: str = "storage"
 
+    cors_origins: list[str] = ["http://localhost:3100"]
+
     groq_api_key: str = ""
     anthropic_api_key: str = ""
     voyage_api_key: str = ""
