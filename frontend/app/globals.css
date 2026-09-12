@@ -1,0 +1,130 @@
+:root {
+  --bg: #0b0f12;
+  --surface: #111819;
+  --surface-raised: #16201f;
+  --surface-inset: #0e1416;
+
+  --border-soft: #1b2528;
+  --border: #243135;
+  --border-strong: #33454a;
+
+  --text: #eef5f4;
+  --text-muted: #8fa5a6;
+  --text-dim: #6c8184;
+
+  --accent: #2dd4bf;
+  --accent-soft: #2dd4bf1a;
+  --pass: #34d399;
+  --fail: #f87171;
+  --warn: #fbbf24;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(900px 500px at 12% -10%, #16332f55, transparent 70%),
+    radial-gradient(700px 400px at 100% 0%, #1d2f4a44, transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 32px 0 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.page-sub {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+}
+
+.grid-stats {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.grid-split {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+input.field,
+select.field {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+input.field:focus,
+select.field:focus {
+  border-color: var(--accent);
+}
+
+.btn {
+  font-family: inherit;
+  transition: filter 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+@media (max-width: 900px) {
+  .grid-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

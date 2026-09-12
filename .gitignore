@@ -8,3 +8,9 @@ storage/
 sample.mp3
 .idea/
 .vscode/
+
+frontend/node_modules/
+frontend/.next/
+frontend/next-env.d.ts
+frontend/tsconfig.tsbuildinfo
+frontend/.env.local
