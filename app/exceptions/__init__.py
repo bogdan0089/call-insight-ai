@@ -5,6 +5,7 @@ from app.exceptions.auth_exceptions import (
     InvalidCredentials,
     InvalidVerificationToken,
     NotAuthenticated,
+    PermissionDenied,
 )
 from app.exceptions.db_exceptions import (
     AlreadyExistsError,
@@ -26,4 +27,5 @@ __all__ = [
     "InvalidCredentials",
     "InvalidVerificationToken",
     "NotAuthenticated",
+    "PermissionDenied",
 ]

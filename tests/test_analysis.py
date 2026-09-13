@@ -89,7 +89,7 @@ async def run_analysis(
     verdicts: list[ItemVerdict],
 ):
     service = AnalysisService(session=session, analyzer=StubAnalyzer(verdicts))
-    service.checklist.get_active = lambda: _as_coroutine(items)  # type: ignore[method-assign]
+    service.checklist.get_active = lambda _org_id: _as_coroutine(items)  # type: ignore[method-assign]
     return await service.analyze_call(call_id)
 
 

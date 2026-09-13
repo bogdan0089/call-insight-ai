@@ -1,3 +1,5 @@
+from collections.abc import Awaitable, Callable
+
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWTError
@@ -5,11 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
 from app.core.security import decode_access_token
-from app.exceptions import AccountDisabled, NotAuthenticated
+from app.exceptions import AccountDisabled, NotAuthenticated, PermissionDenied
 from app.integrations.embeddings.client import build_embedder
 from app.integrations.mail.client import build_mailer
 from app.models.users import User
 from app.repositories.call import CallRepository
+from app.repositories.checklist import ChecklistRepository
+from app.repositories.organization import OrganizationRepository
 from app.repositories.score import CallScoreRepository
 from app.repositories.stats import StatsRepository
 from app.repositories.user import UserRepository
@@ -52,6 +56,8 @@ def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthServic
     return AuthService(
         session=session,
         users=UserRepository(session),
+        organizations=OrganizationRepository(session),
+        checklist=ChecklistRepository(session),
         verifications=EmailVerificationRepository(session),
         invitations=get_invitation_service(session),
     )
@@ -80,3 +86,14 @@ async def get_current_user(
         raise AccountDisabled
 
     return user
+
+
+def require(rule: Callable[[User], bool], action: str) -> Callable[..., Awaitable[User]]:
+    """Guard an endpoint with a rule from app.core.permissions."""
+
+    async def guard(user: User = Depends(get_current_user)) -> User:
+        if not rule(user):
+            raise PermissionDenied(action)
+        return user
+
+    return guard

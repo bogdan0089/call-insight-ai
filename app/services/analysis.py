@@ -60,9 +60,13 @@ class AnalysisService:
         if transcript is None:
             raise EntityNotFound(entity="Transcript", call_id=call_id)
 
-        items = await self.checklist.get_active()
+        items = await self.checklist.get_active(call.organization_id)
 
-        examples = await self.embeddings.find_examples(call_id) if self.embeddings else []
+        examples = (
+            await self.embeddings.find_examples(call_id, call.organization_id)
+            if self.embeddings
+            else []
+        )
         result = await self.analyzer.analyze(transcript.text, items, examples)
 
         await self.raw.create(

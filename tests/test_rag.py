@@ -79,7 +79,7 @@ async def test_find_examples_skips_unverified_calls(session: AsyncSession) -> No
     await session.flush()
 
     examples = await EmbeddingService(session=session, embedder=embedder).find_examples(
-        target.id, limit=10
+        target.id, organization_id=None, limit=10
     )
     found_ids = [example.call_id for example in examples]
 
@@ -127,7 +127,7 @@ async def test_example_carries_only_verified_verdicts(session: AsyncSession) -> 
     await session.flush()
 
     examples = await EmbeddingService(session=session, embedder=embedder).find_examples(
-        target.id, limit=10
+        target.id, organization_id=None, limit=10
     )
     example = next(item for item in examples if item.call_id == call_id)
 
@@ -142,6 +142,6 @@ async def test_find_examples_returns_empty_without_transcript(session: AsyncSess
 
     examples = await EmbeddingService(
         session=session, embedder=FakeEmbedder()
-    ).find_examples(call.id)
+    ).find_examples(call.id, organization_id=None)
 
     assert examples == []

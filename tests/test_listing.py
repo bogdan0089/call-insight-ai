@@ -23,11 +23,11 @@ def sql_counter() -> Iterator[list[str]]:
 
 
 @pytest.mark.asyncio
-async def test_list_returns_page_envelope(client: httpx.AsyncClient) -> None:
+async def test_list_returns_page_envelope(auth_client: httpx.AsyncClient) -> None:
     external_id = uuid.uuid4().hex
-    await client.post("/calls", files=AUDIO, data={"external_id": external_id})
+    await auth_client.post("/calls", files=AUDIO, data={"external_id": external_id})
 
-    response = await client.get("/calls", params={"limit": 5})
+    response = await auth_client.get("/calls", params={"limit": 5})
 
     assert response.status_code == 200
     body = response.json()
@@ -37,20 +37,20 @@ async def test_list_returns_page_envelope(client: httpx.AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_list_is_sorted_by_newest_first(client: httpx.AsyncClient) -> None:
-    await client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
+async def test_list_is_sorted_by_newest_first(auth_client: httpx.AsyncClient) -> None:
+    await auth_client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
 
-    items = (await client.get("/calls", params={"limit": 10})).json()["items"]
+    items = (await auth_client.get("/calls", params={"limit": 10})).json()["items"]
 
     created = [item["created_at"] for item in items]
     assert created == sorted(created, reverse=True)
 
 
 @pytest.mark.asyncio
-async def test_list_filters_by_status(client: httpx.AsyncClient) -> None:
-    await client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
+async def test_list_filters_by_status(auth_client: httpx.AsyncClient) -> None:
+    await auth_client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
 
-    items = (await client.get("/calls", params={"status": "queued"})).json()["items"]
+    items = (await auth_client.get("/calls", params={"status": "queued"})).json()["items"]
 
     assert items
     assert {item["status"] for item in items} == {"queued"}
@@ -68,42 +68,42 @@ async def test_list_filters_by_status(client: httpx.AsyncClient) -> None:
     ],
 )
 async def test_list_rejects_invalid_query(
-    client: httpx.AsyncClient,
+    auth_client: httpx.AsyncClient,
     params: dict[str, object],
 ) -> None:
-    assert (await client.get("/calls", params=params)).status_code == 422
+    assert (await auth_client.get("/calls", params=params)).status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_list_query_count_does_not_grow_with_page_size(
-    client: httpx.AsyncClient,
+    auth_client: httpx.AsyncClient,
     sql_counter: list[str],
 ) -> None:
-    await client.get("/calls", params={"limit": 1})
+    await auth_client.get("/calls", params={"limit": 1})
     small = len(sql_counter)
 
     sql_counter.clear()
-    await client.get("/calls", params={"limit": 100})
+    await auth_client.get("/calls", params={"limit": 100})
     large = len(sql_counter)
 
-    assert small <= 3
-    assert large <= 3
+    assert small <= 4
+    assert large <= 4
 
 
 @pytest.mark.asyncio
-async def test_report_of_unknown_call_returns_404(client: httpx.AsyncClient) -> None:
-    assert (await client.get("/calls/999999/report")).status_code == 404
+async def test_report_of_unknown_call_returns_404(auth_client: httpx.AsyncClient) -> None:
+    assert (await auth_client.get("/calls/999999/report")).status_code == 404
 
 
 @pytest.mark.asyncio
 async def test_report_has_empty_sections_for_fresh_call(
-    client: httpx.AsyncClient,
+    auth_client: httpx.AsyncClient,
 ) -> None:
     call_id = (
-        await client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
+        await auth_client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
     ).json()["id"]
 
-    body = (await client.get(f"/calls/{call_id}/report")).json()
+    body = (await auth_client.get(f"/calls/{call_id}/report")).json()
 
     assert body["transcript_text"] is None
     assert body["segments"] == []
@@ -114,13 +114,13 @@ async def test_report_has_empty_sections_for_fresh_call(
 
 @pytest.mark.asyncio
 async def test_verify_rejects_score_from_another_call(
-    client: httpx.AsyncClient,
+    auth_client: httpx.AsyncClient,
 ) -> None:
     call_id = (
-        await client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
+        await auth_client.post("/calls", files=AUDIO, data={"external_id": uuid.uuid4().hex})
     ).json()["id"]
 
-    response = await client.patch(
+    response = await auth_client.patch(
         f"/calls/{call_id}/scores/999999",
         json={"is_verified": True},
     )
@@ -131,20 +131,23 @@ async def test_verify_rejects_score_from_another_call(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("path", ["/stats/operators", "/stats/checklist"])
 async def test_stats_run_in_a_single_query(
-    client: httpx.AsyncClient,
+    auth_client: httpx.AsyncClient,
     sql_counter: list[str],
     path: str,
 ) -> None:
-    response = await client.get(path)
+    response = await auth_client.get(path)
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
-    assert len(sql_counter) == 1
+
+    aggregations = [stmt for stmt in sql_counter if "GROUP BY" in stmt]
+    assert len(aggregations) == 1
+    assert len(sql_counter) == 2
 
 
 @pytest.mark.asyncio
-async def test_stats_reject_reversed_date_range(client: httpx.AsyncClient) -> None:
-    response = await client.get(
+async def test_stats_reject_reversed_date_range(auth_client: httpx.AsyncClient) -> None:
+    response = await auth_client.get(
         "/stats/operators",
         params={"created_from": "2026-09-10", "created_to": "2026-09-01"},
     )

@@ -6,19 +6,38 @@ from app.core.security import hash_password
 from app.fixtures.checklist import CHECKLIST
 from app.fixtures.users import SEED_PASSWORD, USERS
 from app.models.checklist import ChecklistItem
+from app.models.organizations import Organization
 from app.models.users import User, UserRole
 from app.repositories.checklist import ChecklistRepository
+from app.repositories.organization import OrganizationRepository
 from app.repositories.user import UserRepository
 
+DEFAULT_SLUG = "default"
+DEFAULT_NAME = "Перша організація"
 
-async def seed_checklist() -> None:
+
+async def seed_organization() -> int:
+    async with async_session() as session:
+        repo = OrganizationRepository(session)
+
+        org = await repo.get_by_slug(DEFAULT_SLUG)
+        if org is None:
+            org = await repo.create(
+                Organization(name=DEFAULT_NAME, slug=DEFAULT_SLUG)
+            )
+            await session.commit()
+
+        return org.id
+
+
+async def seed_checklist(organization_id: int) -> None:
     async with async_session() as session:
         repo = ChecklistRepository(session)
 
         for row in CHECKLIST:
-            item = await repo.get_by_code(row["code"])
+            item = await repo.get_by_code(row["code"], organization_id=organization_id)
             if item is None:
-                session.add(ChecklistItem(**row))
+                session.add(ChecklistItem(**row, organization_id=organization_id))
                 continue
 
             item.title = row["title"]
@@ -29,7 +48,7 @@ async def seed_checklist() -> None:
         await session.commit()
 
 
-async def seed_users() -> None:
+async def seed_users(organization_id: int) -> None:
     async with async_session() as session:
         repo = UserRepository(session)
 
@@ -40,6 +59,9 @@ async def seed_users() -> None:
                     user.email_verified_at = datetime.now(UTC)
                 if not user.hashed_password.startswith("$2"):
                     user.hashed_password = hash_password(SEED_PASSWORD)
+                if user.organization_id is None:
+                    user.organization_id = organization_id
+                user.role = UserRole(row["role"])
                 continue
 
             session.add(
@@ -48,6 +70,7 @@ async def seed_users() -> None:
                     first_name=row["first_name"],
                     last_name=row["last_name"],
                     role=UserRole(row["role"]),
+                    organization_id=organization_id,
                     hashed_password=hash_password(SEED_PASSWORD),
                     email_verified_at=datetime.now(UTC),
                 )
@@ -55,10 +78,21 @@ async def seed_users() -> None:
 
         await session.commit()
 
+        for row in USERS:
+            if not row["manager_email"]:
+                continue
+            user = await repo.get_by_email(row["email"])
+            manager = await repo.get_by_email(row["manager_email"])
+            if user is not None and manager is not None:
+                user.manager_id = manager.id
+
+        await session.commit()
+
 
 async def seed_all() -> None:
-    await seed_users()
-    await seed_checklist()
+    organization_id = await seed_organization()
+    await seed_users(organization_id)
+    await seed_checklist(organization_id)
 
 
 if __name__ == "__main__":

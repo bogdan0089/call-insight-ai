@@ -29,8 +29,11 @@ class CallRepository(SqlalchemyAsyncRepository[Call]):
         score_max: Decimal | None = None,
         limit: int = 20,
         offset: int = 0,
+        scope: ColumnElement[bool] | None = None,
     ) -> tuple[Sequence[Call], int]:
         conditions: list[ColumnElement[bool]] = []
+        if scope is not None:
+            conditions.append(scope)
         if operator_id is not None:
             conditions.append(Call.operator_id == operator_id)
         if status is not None:
@@ -62,10 +65,18 @@ class CallRepository(SqlalchemyAsyncRepository[Call]):
 
         return rows.scalars().all(), total.scalar_one()
 
-    async def get_report(self, call_id: int) -> Call | None:
+    async def get_report(
+        self,
+        call_id: int,
+        scope: ColumnElement[bool] | None = None,
+    ) -> Call | None:
+        conditions: list[ColumnElement[bool]] = [Call.id == call_id]
+        if scope is not None:
+            conditions.append(scope)
+
         stmt = (
             select(Call)
-            .where(Call.id == call_id)
+            .where(*conditions)
             .options(
                 selectinload(Call.operator),
                 selectinload(Call.transcript).selectinload(Transcript.segments),

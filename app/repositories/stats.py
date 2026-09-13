@@ -22,8 +22,11 @@ class StatsRepository:
         operator_id: int | None,
         created_from: datetime | None,
         created_to: datetime | None,
+        scope: ColumnElement[bool] | None,
     ) -> list[ColumnElement[bool]]:
         conditions: list[ColumnElement[bool]] = []
+        if scope is not None:
+            conditions.append(scope)
         if operator_id is not None:
             conditions.append(Call.operator_id == operator_id)
         if created_from is not None:
@@ -41,6 +44,8 @@ class StatsRepository:
 
     async def operators(
         self,
+        call_scope: ColumnElement[bool] | None,
+        operator_scope: ColumnElement[bool] | None,
         operator_id: int | None = None,
         created_from: datetime | None = None,
         created_to: datetime | None = None,
@@ -69,14 +74,20 @@ class StatsRepository:
                 func.count(Call.id).filter(failed_required).label("failed_required"),
             )
             .join(Call, Call.operator_id == User.id)
-            .where(*self._call_conditions(operator_id, created_from, created_to))
+            .where(
+                *self._call_conditions(operator_id, created_from, created_to, call_scope)
+            )
             .group_by(User.id)
             .order_by(func.avg(Call.total_score).desc().nullslast())
         )
+        if operator_scope is not None:
+            stmt = stmt.where(operator_scope)
+
         return await self._fetch(stmt)
 
     async def checklist(
         self,
+        call_scope: ColumnElement[bool] | None,
         operator_id: int | None = None,
         created_from: datetime | None = None,
         created_to: datetime | None = None,
@@ -96,7 +107,9 @@ class StatsRepository:
             )
             .join(CallScore, CallScore.checklist_item_id == ChecklistItem.id)
             .join(Call, Call.id == CallScore.call_id)
-            .where(*self._call_conditions(operator_id, created_from, created_to))
+            .where(
+                *self._call_conditions(operator_id, created_from, created_to, call_scope)
+            )
             .group_by(ChecklistItem.id)
             .order_by((passed * 1.0 / func.nullif(scored, 0)).asc().nullslast())
         )

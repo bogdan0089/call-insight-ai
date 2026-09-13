@@ -19,6 +19,19 @@ class UserResponse(BaseModel):
     created_at: datetime
 
 
+class OrganizationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    slug: str
+
+
+class ProfileResponse(BaseModel):
+    user: UserResponse
+    organization: OrganizationOut | None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

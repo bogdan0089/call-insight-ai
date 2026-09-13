@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.orm import selectinload
 
 from app.models.calls import Call, CallStatus
@@ -21,11 +21,13 @@ class TranscriptRepository(SqlalchemyAsyncRepository[Transcript]):
         embedding_model: str,
         exclude_call_id: int | None = None,
         limit: int = 5,
+        scope: ColumnElement[bool] | None = None,
     ) -> Sequence[tuple[Transcript, float]]:
         distance = Transcript.embedding.cosine_distance(embedding)
 
         stmt = (
             select(Transcript, distance.label("distance"))
+            .join(Call, Call.id == Transcript.call_id)
             .where(
                 Transcript.embedding.is_not(None),
                 Transcript.embedding_model == embedding_model,
@@ -33,6 +35,8 @@ class TranscriptRepository(SqlalchemyAsyncRepository[Transcript]):
             .order_by(distance)
             .limit(limit)
         )
+        if scope is not None:
+            stmt = stmt.where(scope)
         if exclude_call_id is not None:
             stmt = stmt.where(Transcript.call_id != exclude_call_id)
 
@@ -43,6 +47,7 @@ class TranscriptRepository(SqlalchemyAsyncRepository[Transcript]):
         self,
         embedding: list[float],
         embedding_model: str,
+        organization_id: int | None,
         exclude_call_id: int | None = None,
         limit: int = 3,
     ) -> Sequence[tuple[Transcript, float]]:
@@ -64,6 +69,7 @@ class TranscriptRepository(SqlalchemyAsyncRepository[Transcript]):
                 Transcript.embedding.is_not(None),
                 Transcript.embedding_model == embedding_model,
                 Call.status == CallStatus.DONE,
+                Call.organization_id == organization_id,
                 has_verified_scores,
             )
             .options(
