@@ -1,12 +1,13 @@
 from collections.abc import Awaitable, Callable
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.rate_limit import enforce
 from app.core.db import get_session
+from app.core.permissions import is_demo
 from app.core.security import decode_access_token
 from app.exceptions import AccountDisabled, NotAuthenticated, PermissionDenied
 from app.integrations.embeddings.client import build_embedder
@@ -85,11 +86,14 @@ def get_api_key_service(session: AsyncSession = Depends(get_session)) -> ApiKeyS
     )
 
 
+READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
 bearer = HTTPBearer(auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
     api_key: str | None = Depends(api_key_header),
     session: AsyncSession = Depends(get_session),
@@ -120,6 +124,8 @@ async def get_current_user(
         raise NotAuthenticated("Invalid or expired token")
     if not user.is_active:
         raise AccountDisabled
+    if is_demo(user) and request.method not in READ_METHODS:
+        raise PermissionDenied("demo account is read-only")
 
     await enforce("principal", f"user:{user.id}")
     return user

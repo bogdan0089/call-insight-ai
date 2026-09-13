@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.api.deps import get_auth_service, get_current_user
 from app.api.rate_limit import enforce, limit_by_ip
+from app.core.permissions import is_demo
 from app.models.users import User
 from app.schemas.input.auth import (
     AcceptInviteRequest,
@@ -82,6 +83,20 @@ async def accept_invitation(
 
 
 @router.post(
+    "/demo",
+    response_model=TokenResponse,
+    dependencies=[Depends(limit_by_ip("demo"))],
+)
+async def demo_login(service: AuthService = Depends(get_auth_service)) -> TokenResponse:
+    user, token, expires_in = await service.demo_login()
+    return TokenResponse(
+        access_token=token,
+        expires_in=expires_in,
+        user=UserResponse.model_validate(user),
+    )
+
+
+@router.post(
     "/login",
     response_model=TokenResponse,
     dependencies=[Depends(limit_by_ip("login_ip"))],
@@ -109,6 +124,7 @@ async def me(
 ) -> ProfileResponse:
     user, organization = await service.profile(user)
     return ProfileResponse(
+        is_demo=is_demo(user),
         user=UserResponse.model_validate(user),
         organization=(
             OrganizationOut.model_validate(organization) if organization else None

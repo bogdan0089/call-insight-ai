@@ -15,6 +15,7 @@ from app.core.slug import slugify, unique_slug
 from app.exceptions import (
     AccountDisabled,
     EmailNotVerified,
+    EntityNotFound,
     InvalidCredentials,
     InvalidVerificationToken,
 )
@@ -136,6 +137,18 @@ class AuthService:
         if user.organization_id is None:
             return user, None
         return user, await self.organizations.get(user.organization_id)
+
+    async def demo_login(self) -> tuple[User, str, int]:
+        """Issue a token for the read-only demo account."""
+        if not settings.demo_enabled:
+            raise EntityNotFound(entity="Demo")
+        user = await self.users.get_by_email(settings.demo_email)
+        if user is None or not user.is_active:
+            raise EntityNotFound(entity="Demo")
+
+        token = create_access_token(user_id=user.id, role=user.role.value)
+        logger.info("demo login")
+        return user, token, settings.jwt_ttl_minutes * 60
 
     async def login(self, email: str, password: str) -> tuple[User, str, int]:
         user = await self.users.get_by_email(email.lower())

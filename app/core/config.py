@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     report_timezone: str = "Europe/Kyiv"
     api_key_touch_seconds: int = 300
 
+    demo_enabled: bool = False
+    demo_email: str = "demo@call-insight.local"
+
     rate_limit_enabled: bool = True
     rate_limit_fail_open: bool = True
     trust_forwarded_for: bool = False
@@ -48,6 +51,7 @@ class Settings(BaseSettings):
         "register": "5/3600",
         "resend": "5/3600",
         "verify": "20/600",
+        "demo": "30/600",
     }
     email_verification_ttl_hours: int = 24
 
