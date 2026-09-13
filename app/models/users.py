@@ -9,6 +9,7 @@ from app.core.db import Base
 
 if TYPE_CHECKING:
     from app.models.calls import Call
+    from app.models.verification import EmailVerification
 
 
 class UserRole(str, enum.Enum):
@@ -35,9 +36,20 @@ class User(Base):
         index=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     calls: Mapped[list["Call"]] = relationship(back_populates="operator")
+    verifications: Mapped[list["EmailVerification"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def is_verified(self) -> bool:
+        return self.email_verified_at is not None
