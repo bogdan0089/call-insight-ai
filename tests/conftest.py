@@ -25,6 +25,14 @@ async def dispose_engine() -> AsyncGenerator[None]:
 
 
 @pytest.fixture(autouse=True)
+def mail_to_log(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Send mail inline to the log, never through real SMTP."""
+    monkeypatch.setattr(settings, "smtp_host", "")
+    monkeypatch.setattr(settings, "mail_async", False)
+    monkeypatch.setattr(settings, "mail_dir", "")
+
+
+@pytest.fixture(autouse=True)
 def no_rate_limits(monkeypatch: pytest.MonkeyPatch) -> None:
     """Disable rate limits; all tests share one client IP."""
     monkeypatch.setattr(settings, "rate_limit_enabled", False)
@@ -96,7 +104,6 @@ async def auth_client(owner: User) -> AsyncGenerator[httpx.AsyncClient]:
         headers=auth_header(owner),
     ) as client:
         yield client
-
 
 
 @pytest.fixture
