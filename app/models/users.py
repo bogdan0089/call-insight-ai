@@ -72,3 +72,8 @@ class User(Base):
     @property
     def is_verified(self) -> bool:
         return self.email_verified_at is not None
+
+    @property
+    def manager_name(self) -> str | None:
+        manager = self.__dict__.get("manager")
+        return manager.full_name if manager is not None else None

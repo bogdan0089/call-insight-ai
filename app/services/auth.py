@@ -116,6 +116,22 @@ class AuthService:
         await self.session.commit()
         return record.user
 
+    async def accept_invitation(self, token: str, password: str) -> User:
+        """Set the invited user's password and verify their email."""
+        record = await self.verifications.get_pending(hash_token(token))
+        if record is None:
+            raise InvalidVerificationToken
+
+        now = datetime.now(UTC)
+        record.used_at = now
+        record.user.hashed_password = hash_password(password)
+        if record.user.email_verified_at is None:
+            record.user.email_verified_at = now
+
+        await self.session.commit()
+        logger.info("invitation accepted | user=%s", record.user.id)
+        return record.user
+
     async def profile(self, user: User) -> tuple[User, Organization | None]:
         if user.organization_id is None:
             return user, None

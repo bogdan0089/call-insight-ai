@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, status
 from app.api.deps import get_auth_service, get_current_user
 from app.models.users import User
 from app.schemas.input.auth import (
+    AcceptInviteRequest,
     LoginRequest,
     RegisterRequest,
     ResendRequest,
@@ -49,6 +50,17 @@ async def verify_email(
     service: AuthService = Depends(get_auth_service),
 ) -> UserResponse:
     user = await service.verify(token=payload.token)
+    return UserResponse.model_validate(user)
+
+
+@router.post("/accept-invite", response_model=UserResponse)
+async def accept_invitation(
+    payload: AcceptInviteRequest,
+    service: AuthService = Depends(get_auth_service),
+) -> UserResponse:
+    user = await service.accept_invitation(
+        token=payload.token, password=payload.password
+    )
     return UserResponse.model_validate(user)
 
 

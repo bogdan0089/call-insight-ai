@@ -29,3 +29,14 @@ def verification_email(link: str) -> tuple[str, str]:
         "Якщо ви не реєструвались — просто проігноруйте цей лист."
     )
     return subject, body
+
+
+def invitation_email(organization_name: str, link: str) -> tuple[str, str]:
+    subject = f"Запрошення до {organization_name} — call insight"
+    body = (
+        f"Вас додали до команди «{organization_name}».\n\n"
+        "Щоб увійти, задайте собі пароль за посиланням:\n"
+        f"{link}\n\n"
+        f"Посилання діє {settings.email_verification_ttl_hours} год."
+    )
+    return subject, body

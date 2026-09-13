@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.security import new_verification_token
-from app.integrations.mail.client import Mailer, verification_email
+from app.integrations.mail.client import Mailer, invitation_email, verification_email
 from app.models.users import User
 from app.models.verification import EmailVerification
 from app.repositories.verification import EmailVerificationRepository
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 
 class InvitationService:
-    """Issue one-time links for email verification."""
+    """Issue one-time links for email verification and invitations."""
 
     def __init__(
         self,
@@ -32,6 +32,19 @@ class InvitationService:
         subject, body = verification_email(self._link("verify", token))
         await self._deliver(user, subject, body)
         logger.info("verification sent | user=%s", user.id)
+
+    async def send(self, user: User, organization_name: str) -> None:
+        token = await self._issue(user)
+        subject, body = invitation_email(
+            organization_name, self._link("invite", token)
+        )
+        await self._deliver(user, subject, body)
+        logger.info(
+            "invitation sent | user=%s org=%s role=%s",
+            user.id,
+            user.organization_id,
+            user.role.value,
+        )
 
     async def _deliver(self, user: User, subject: str, body: str) -> None:
         """Commit, then send; delivery failures are logged, not raised."""
