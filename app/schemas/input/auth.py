@@ -53,3 +53,16 @@ class VerifyRequest(BaseModel):
 class ResendRequest(BaseModel):
     email: EmailStr
 
+
+class AcceptInviteRequest(BaseModel):
+    token: str = Field(
+        min_length=VERIFICATION_TOKEN_MIN, max_length=VERIFICATION_TOKEN_MAX
+    )
+    password: str = Field(min_length=PASSWORD_MIN, max_length=PASSWORD_MAX)
+
+    @field_validator("password")
+    @classmethod
+    def check_strength(cls, value: str) -> str:
+        if not PASSWORD_RULE.match(value):
+            raise ValueError("password must contain a letter and a digit")
+        return value

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import router as auth_router
 from app.api.calls import router as calls_router
+from app.api.people import router as people_router
 from app.api.stats import router as stats_router
 from app.core.config import settings
 from app.core.db import get_session
@@ -25,6 +26,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(calls_router)
+app.include_router(people_router)
 app.include_router(stats_router)
 
 

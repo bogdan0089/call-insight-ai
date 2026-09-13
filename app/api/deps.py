@@ -14,6 +14,7 @@ from app.models.users import User
 from app.repositories.call import CallRepository
 from app.repositories.checklist import ChecklistRepository
 from app.repositories.organization import OrganizationRepository
+from app.repositories.people import PeopleRepository
 from app.repositories.score import CallScoreRepository
 from app.repositories.stats import StatsRepository
 from app.repositories.user import UserRepository
@@ -22,6 +23,7 @@ from app.services.auth import AuthService
 from app.services.call import CallService
 from app.services.embedding import EmbeddingService
 from app.services.invitation import InvitationService
+from app.services.people import PeopleService
 from app.services.score import CallScoreService
 from app.services.stats import StatsService
 
@@ -59,6 +61,15 @@ def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthServic
         organizations=OrganizationRepository(session),
         checklist=ChecklistRepository(session),
         verifications=EmailVerificationRepository(session),
+        invitations=get_invitation_service(session),
+    )
+
+
+def get_people_service(session: AsyncSession = Depends(get_session)) -> PeopleService:
+    return PeopleService(
+        session=session,
+        repo=PeopleRepository(session),
+        organizations=OrganizationRepository(session),
         invitations=get_invitation_service(session),
     )
 
