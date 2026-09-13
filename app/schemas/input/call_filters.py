@@ -1,9 +1,25 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.core.limits import (
+    PAGE_SIZE_DEFAULT,
+    PAGE_SIZE_MAX,
+    SCORE_MAX,
+    SCORE_MIN,
+)
+from app.core.sorting import SortOrder
 from app.models.calls import CallStatus
+
+
+class CallSortField(StrEnum):
+    CREATED_AT = "created_at"
+    OPERATOR = "operator"
+    TOTAL_SCORE = "total_score"
+    DURATION = "duration_sec"
+    STATUS = "status"
 
 
 class CallListQuery(BaseModel):
@@ -11,10 +27,12 @@ class CallListQuery(BaseModel):
     status: CallStatus | None = None
     created_from: datetime | None = None
     created_to: datetime | None = None
-    score_min: Decimal | None = Field(default=None, ge=0, le=100)
-    score_max: Decimal | None = Field(default=None, ge=0, le=100)
-    limit: int = Field(default=20, ge=1, le=100)
+    score_min: Decimal | None = Field(default=None, ge=SCORE_MIN, le=SCORE_MAX)
+    score_max: Decimal | None = Field(default=None, ge=SCORE_MIN, le=SCORE_MAX)
+    limit: int = Field(default=PAGE_SIZE_DEFAULT, ge=1, le=PAGE_SIZE_MAX)
     offset: int = Field(default=0, ge=0)
+    sort_by: CallSortField = CallSortField.CREATED_AT
+    order: SortOrder = SortOrder.DESC
 
     @model_validator(mode="after")
     def check_ranges(self) -> "CallListQuery":

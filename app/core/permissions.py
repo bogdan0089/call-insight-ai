@@ -7,6 +7,14 @@ from app.models.users import UserRole
 if TYPE_CHECKING:
     from app.models.users import User
 
+ROLE_RANK: dict[UserRole, int] = {
+    UserRole.SUPER_ADMIN: 0,
+    UserRole.OWNER: 1,
+    UserRole.ADMIN: 2,
+    UserRole.MANAGER: 3,
+    UserRole.OPERATOR: 4,
+}
+
 PLATFORM_STAFF = frozenset({UserRole.SUPER_ADMIN})
 WHOLE_ORG = frozenset({UserRole.OWNER, UserRole.ADMIN})
 MANAGE_PEOPLE = frozenset({UserRole.OWNER, UserRole.ADMIN, UserRole.MANAGER})

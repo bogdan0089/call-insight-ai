@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, computed_field
@@ -19,6 +20,14 @@ class OperatorStats(BaseModel):
         if self.calls_total == 0:
             return None
         return round(self.failed_required / self.calls_total, 4)
+
+
+class DailyStats(BaseModel):
+    day: date
+    calls_total: int
+    calls_scored: int
+    avg_score: Decimal | None
+    failed_required: int
 
 
 class ChecklistStats(BaseModel):

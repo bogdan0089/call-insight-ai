@@ -153,3 +153,30 @@ async def test_checklist_statistics_only_count_own_company(
     assert stats.status_code == 200
     assert item_id not in [row["checklist_item_id"] for row in stats.json()]
 
+
+@pytest.mark.asyncio
+async def test_daily_statistics_stay_inside_the_company(
+    client: httpx.AsyncClient,
+) -> None:
+    ours = await make_org_user(UserRole.OWNER)
+    theirs = await make_org_user(UserRole.OWNER)
+    await upload(client, ours)
+
+    mine = await client.get("/stats/daily", headers=auth_header(ours))
+    alien = await client.get("/stats/daily", headers=auth_header(theirs))
+
+    assert sum(row["calls_total"] for row in mine.json()) >= 1
+    assert alien.json() == []
+
+
+@pytest.mark.asyncio
+async def test_daily_statistics_are_ordered_by_day(
+    client: httpx.AsyncClient,
+) -> None:
+    owner = await make_org_user(UserRole.OWNER)
+    await upload(client, owner)
+
+    rows = (await client.get("/stats/daily", headers=auth_header(owner))).json()
+    days = [row["day"] for row in rows]
+
+    assert days == sorted(days)
