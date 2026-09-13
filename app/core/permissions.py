@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from app.core.config import settings
 from app.models.users import UserRole
 
 if TYPE_CHECKING:
@@ -42,3 +43,7 @@ def can_verify_scores(user: "User") -> bool:
     """Operators never verify scores, including their own."""
     return user.role in VERIFY_SCORES
 
+
+def is_demo(user: "User") -> bool:
+    """The shared demo account, which may only read."""
+    return settings.demo_enabled and user.email == settings.demo_email

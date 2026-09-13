@@ -30,6 +30,7 @@ class OrganizationOut(BaseModel):
 class ProfileResponse(BaseModel):
     user: UserResponse
     organization: OrganizationOut | None
+    is_demo: bool = False
 
 
 class TokenResponse(BaseModel):
