@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import get_auth_service, get_current_user
+from app.api.rate_limit import enforce, limit_by_ip
 from app.models.users import User
 from app.schemas.input.auth import (
     AcceptInviteRequest,
@@ -20,7 +21,11 @@ from app.services.auth import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/register",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(limit_by_ip("register"))],
+)
 async def register(
     payload: RegisterRequest,
     service: AuthService = Depends(get_auth_service),
@@ -35,7 +40,11 @@ async def register(
     return {"detail": "Check your inbox to confirm the address"}
 
 
-@router.post("/resend", status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/resend",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(limit_by_ip("resend"))],
+)
 async def resend_verification(
     payload: ResendRequest,
     service: AuthService = Depends(get_auth_service),
@@ -44,7 +53,11 @@ async def resend_verification(
     return {"detail": "Check your inbox to confirm the address"}
 
 
-@router.post("/verify", response_model=UserResponse)
+@router.post(
+    "/verify",
+    response_model=UserResponse,
+    dependencies=[Depends(limit_by_ip("verify"))],
+)
 async def verify_email(
     payload: VerifyRequest,
     service: AuthService = Depends(get_auth_service),
@@ -53,7 +66,11 @@ async def verify_email(
     return UserResponse.model_validate(user)
 
 
-@router.post("/accept-invite", response_model=UserResponse)
+@router.post(
+    "/accept-invite",
+    response_model=UserResponse,
+    dependencies=[Depends(limit_by_ip("verify"))],
+)
 async def accept_invitation(
     payload: AcceptInviteRequest,
     service: AuthService = Depends(get_auth_service),
@@ -64,11 +81,16 @@ async def accept_invitation(
     return UserResponse.model_validate(user)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    dependencies=[Depends(limit_by_ip("login_ip"))],
+)
 async def login(
     payload: LoginRequest,
     service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
+    await enforce("login_email", payload.email.lower())
     user, token, expires_in = await service.login(
         email=payload.email,
         password=payload.password,

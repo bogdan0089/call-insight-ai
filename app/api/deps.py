@@ -5,6 +5,7 @@ from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBea
 from jwt import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.rate_limit import enforce
 from app.core.db import get_session
 from app.core.security import decode_access_token
 from app.exceptions import AccountDisabled, NotAuthenticated, PermissionDenied
@@ -102,6 +103,7 @@ async def get_current_user(
         user = await service.authenticate(api_key)
         if user is None:
             raise NotAuthenticated("Invalid API key")
+        await enforce("principal", f"user:{user.id}")
         return user
 
     if credentials is None:
@@ -119,6 +121,7 @@ async def get_current_user(
     if not user.is_active:
         raise AccountDisabled
 
+    await enforce("principal", f"user:{user.id}")
     return user
 
 

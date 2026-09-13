@@ -34,6 +34,20 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3100"
 
     api_key_touch_seconds: int = 300
+
+    rate_limit_enabled: bool = True
+    rate_limit_fail_open: bool = True
+    trust_forwarded_for: bool = False
+
+    rate_limits: dict[str, str] = {
+        "ip": "300/60",
+        "principal": "600/60",
+        "login_ip": "20/300",
+        "login_email": "5/300",
+        "register": "5/3600",
+        "resend": "5/3600",
+        "verify": "20/600",
+    }
     email_verification_ttl_hours: int = 24
 
 
