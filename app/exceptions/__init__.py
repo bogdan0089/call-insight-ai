@@ -14,6 +14,7 @@ from app.exceptions.db_exceptions import (
     EntityNotFound,
     ForeignKeyViolationError,
 )
+from app.exceptions.rate_limit_exceptions import RateLimitUnavailable, TooManyRequests
 
 __all__ = [
     "AccountDisabled",
@@ -28,4 +29,6 @@ __all__ = [
     "InvalidVerificationToken",
     "NotAuthenticated",
     "PermissionDenied",
+    "RateLimitUnavailable",
+    "TooManyRequests",
 ]

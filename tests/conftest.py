@@ -5,7 +5,10 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 
+from app.core.config import settings
 from app.core.db import async_session, engine
+from app.core.rate_limit import rule_for
+from app.core.redis import close_redis
 from app.core.security import create_access_token, hash_password
 from app.core.slug import slugify, unique_slug
 from app.main import app
@@ -18,6 +21,13 @@ from app.workers import tasks
 async def dispose_engine() -> AsyncGenerator[None]:
     yield
     await engine.dispose()
+    await close_redis()
+
+
+@pytest.fixture(autouse=True)
+def no_rate_limits(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Disable rate limits; all tests share one client IP."""
+    monkeypatch.setattr(settings, "rate_limit_enabled", False)
 
 
 @pytest.fixture(autouse=True)
@@ -87,3 +97,16 @@ async def auth_client(owner: User) -> AsyncGenerator[httpx.AsyncClient]:
     ) as client:
         yield client
 
+
+
+@pytest.fixture
+def rate_limits(monkeypatch: pytest.MonkeyPatch):
+    """Enable rate limits with the given thresholds."""
+
+    def configure(**rules: str) -> None:
+        monkeypatch.setattr(settings, "rate_limit_enabled", True)
+        monkeypatch.setattr(settings, "rate_limits", {**settings.rate_limits, **rules})
+        rule_for.cache_clear()
+
+    yield configure
+    rule_for.cache_clear()

@@ -8,6 +8,7 @@ from app.api.api_keys import router as api_keys_router
 from app.api.auth import router as auth_router
 from app.api.calls import router as calls_router
 from app.api.people import router as people_router
+from app.api.rate_limit import limit_by_ip
 from app.api.stats import router as stats_router
 from app.core.config import settings
 from app.core.db import get_session
@@ -16,13 +17,14 @@ from app.exceptions import AppException
 
 configure_logging()
 
-app = FastAPI(title="Call Insight")
+app = FastAPI(title="Call Insight", dependencies=[Depends(limit_by_ip("ip"))])
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
 )
 
 app.include_router(auth_router)
@@ -37,6 +39,7 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
     return JSONResponse(
         status_code=exc.http_status_code,
         content={"detail": exc.message, "code": type(exc).__name__, "info": exc.info},
+        headers=exc.headers,
     )
 
 
