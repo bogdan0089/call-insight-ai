@@ -9,6 +9,7 @@ from app.core.db import async_session, engine
 from app.fixtures.dialogues import DIALOGUES
 from app.integrations.embeddings.client import build_embedder
 from app.integrations.llm.client import AnthropicAnalyzer, FakeAnalyzer, LLMAnalyzer
+from app.integrations.mail.client import build_transport
 from app.models.calls import CallStatus
 from app.models.transcripts import Transcript, TranscriptSegment
 from app.repositories.call import CallRepository
@@ -32,7 +33,7 @@ def build_analyzer(call_id: int) -> LLMAnalyzer:
 
 
 def run_task(coro: Coroutine[Any, Any, None]) -> None:
-    """Кожна задача працює у власному event loop, тому пул зʼєднань не переживає її."""
+    """Run a coroutine in its own event loop and dispose the engine."""
 
     async def runner() -> None:
         try:
@@ -41,6 +42,16 @@ def run_task(coro: Coroutine[Any, Any, None]) -> None:
             await engine.dispose()
 
     asyncio.run(runner())
+
+
+@celery_app.task(name="send_email", bind=True, max_retries=5)
+def send_email(self, to: str, subject: str, body: str) -> None:
+    """Deliver an email, retrying with a growing delay."""
+    try:
+        build_transport().send(to, subject, body)
+    except Exception as exc:
+        logger.warning("mail to %s failed: %s", to, exc)
+        raise self.retry(exc=exc, countdown=30 * (self.request.retries + 1)) from exc
 
 
 @celery_app.task(name="process_call", bind=True, max_retries=3)

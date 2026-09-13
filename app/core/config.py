@@ -34,7 +34,6 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3100"
 
     report_timezone: str = "Europe/Kyiv"
-
     api_key_touch_seconds: int = 300
 
     rate_limit_enabled: bool = True
@@ -51,6 +50,19 @@ class Settings(BaseSettings):
         "verify": "20/600",
     }
     email_verification_ttl_hours: int = 24
+
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "no-reply@call-insight.local"
+    smtp_from_name: str = "call insight"
+    smtp_use_tls: bool = True
+    smtp_timeout_seconds: int = 15
+
+    mail_async: bool = True
+
+    mail_dir: str = "storage/mail"
 
 
 settings = Settings()
