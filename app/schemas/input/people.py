@@ -1,9 +1,19 @@
+from enum import StrEnum
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.limits import NAME_MAX, NAME_MIN, PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX
+from app.core.sorting import SortOrder
 from app.models.users import UserRole
 
 INVITABLE_ROLES = frozenset({UserRole.ADMIN, UserRole.MANAGER, UserRole.OPERATOR})
+
+
+class PeopleSortField(StrEnum):
+    NAME = "name"
+    EMAIL = "email"
+    ROLE = "role"
+    CREATED_AT = "created_at"
 
 
 class PeopleQuery(BaseModel):
@@ -12,6 +22,8 @@ class PeopleQuery(BaseModel):
     is_active: bool | None = None
     limit: int = Field(default=PAGE_SIZE_DEFAULT, ge=1, le=PAGE_SIZE_MAX)
     offset: int = Field(default=0, ge=0)
+    sort_by: PeopleSortField = PeopleSortField.NAME
+    order: SortOrder = SortOrder.ASC
 
 
 class InviteRequest(BaseModel):

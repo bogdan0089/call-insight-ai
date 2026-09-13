@@ -6,11 +6,22 @@ from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 
+from app.core.sorting import SortOrder, apply_sort
 from app.exceptions import DatabaseError
 from app.models.calls import Call, CallStatus
 from app.models.scores import CallScore
 from app.models.transcripts import Transcript
+from app.models.users import User
 from app.repositories.base_repository import SqlalchemyAsyncRepository
+from app.schemas.input.call_filters import CallSortField
+
+SORT_COLUMNS = {
+    CallSortField.CREATED_AT: Call.created_at,
+    CallSortField.OPERATOR: func.lower(User.last_name + " " + User.first_name),
+    CallSortField.TOTAL_SCORE: Call.total_score,
+    CallSortField.DURATION: Call.duration_sec,
+    CallSortField.STATUS: Call.status,
+}
 
 
 class CallRepository(SqlalchemyAsyncRepository[Call]):
@@ -30,6 +41,8 @@ class CallRepository(SqlalchemyAsyncRepository[Call]):
         limit: int = 20,
         offset: int = 0,
         scope: ColumnElement[bool] | None = None,
+        sort_by: CallSortField = CallSortField.CREATED_AT,
+        order: SortOrder = SortOrder.DESC,
     ) -> tuple[Sequence[Call], int]:
         conditions: list[ColumnElement[bool]] = []
         if scope is not None:
@@ -47,14 +60,13 @@ class CallRepository(SqlalchemyAsyncRepository[Call]):
         if score_max is not None:
             conditions.append(Call.total_score <= score_max)
 
-        rows_stmt = (
-            select(Call)
-            .where(*conditions)
-            .options(selectinload(Call.operator))
-            .order_by(Call.created_at.desc(), Call.id.desc())
-            .limit(limit)
-            .offset(offset)
-        )
+        rows = select(Call).where(*conditions).options(selectinload(Call.operator))
+        if sort_by is CallSortField.OPERATOR:
+            rows = rows.outerjoin(User, User.id == Call.operator_id)
+
+        rows_stmt = apply_sort(
+            rows, SORT_COLUMNS, sort_by, order, tiebreaker=Call.id
+        ).limit(limit).offset(offset)
         total_stmt = select(func.count()).select_from(Call).where(*conditions)
 
         try:

@@ -4,11 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.permissions import sees_whole_org
+from app.core.sorting import SortOrder
 from app.exceptions import AlreadyExistsError, EntityNotFound, PermissionDenied
 from app.models.users import User, UserRole
 from app.repositories.organization import OrganizationRepository
 from app.repositories.people import PeopleRepository
 from app.repositories.scope import visible_operators
+from app.schemas.input.people import PeopleSortField
 from app.services.invitation import InvitationService
 
 logger = get_logger(__name__)
@@ -37,6 +39,8 @@ class PeopleService:
         is_active: bool | None = None,
         limit: int = 20,
         offset: int = 0,
+        sort_by: PeopleSortField = PeopleSortField.NAME,
+        order: SortOrder = SortOrder.ASC,
     ) -> tuple[Sequence[User], int]:
         return await self.repo.list_people(
             scope=visible_operators(actor),
@@ -45,6 +49,8 @@ class PeopleService:
             is_active=is_active,
             limit=limit,
             offset=offset,
+            sort_by=sort_by,
+            order=order,
         )
 
     async def invite(

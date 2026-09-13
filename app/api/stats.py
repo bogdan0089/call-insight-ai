@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, Query
 from app.api.deps import get_current_user, get_stats_service
 from app.models.users import User
 from app.repositories.scope import visible_calls, visible_operators
-from app.schemas.input.stats import StatsQuery
-from app.schemas.output.stats import ChecklistStats, OperatorStats
+from app.schemas.input.stats import ChecklistStatsQuery, OperatorStatsQuery, StatsQuery
+from app.schemas.output.stats import ChecklistStats, DailyStats, OperatorStats
 from app.services.stats import StatsService
 
 router = APIRouter(prefix="/stats", tags=["stats"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/stats", tags=["stats"])
 
 @router.get("/operators", response_model=list[OperatorStats])
 async def operator_stats(
-    query: Annotated[StatsQuery, Query()],
+    query: Annotated[OperatorStatsQuery, Query()],
     service: StatsService = Depends(get_stats_service),
     actor: User = Depends(get_current_user),
 ) -> list[OperatorStats]:
@@ -25,9 +25,18 @@ async def operator_stats(
     )
 
 
+@router.get("/daily", response_model=list[DailyStats])
+async def daily_stats(
+    query: Annotated[StatsQuery, Query()],
+    service: StatsService = Depends(get_stats_service),
+    actor: User = Depends(get_current_user),
+) -> list[DailyStats]:
+    return await service.daily(call_scope=visible_calls(actor), **query.model_dump())
+
+
 @router.get("/checklist", response_model=list[ChecklistStats])
 async def checklist_stats(
-    query: Annotated[StatsQuery, Query()],
+    query: Annotated[ChecklistStatsQuery, Query()],
     service: StatsService = Depends(get_stats_service),
     actor: User = Depends(get_current_user),
 ) -> list[ChecklistStats]:

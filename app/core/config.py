@@ -33,6 +33,8 @@ class Settings(BaseSettings):
 
     frontend_url: str = "http://localhost:3100"
 
+    report_timezone: str = "Europe/Kyiv"
+
     api_key_touch_seconds: int = 300
 
     rate_limit_enabled: bool = True

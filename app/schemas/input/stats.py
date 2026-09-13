@@ -1,6 +1,29 @@
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
+
+from app.core.sorting import SortOrder
+
+
+class OperatorSortField(StrEnum):
+    NAME = "operator_name"
+    CALLS_TOTAL = "calls_total"
+    CALLS_SCORED = "calls_scored"
+    AVG_SCORE = "avg_score"
+    MIN_SCORE = "min_score"
+    MAX_SCORE = "max_score"
+    FAILED_REQUIRED = "failed_required"
+    FAILED_REQUIRED_RATE = "failed_required_rate"
+
+
+class ChecklistSortField(StrEnum):
+    CODE = "code"
+    TITLE = "title"
+    WEIGHT = "weight"
+    SCORED = "scored"
+    PASSED = "passed"
+    PASS_RATE = "pass_rate"
 
 
 class StatsQuery(BaseModel):
@@ -17,3 +40,13 @@ class StatsQuery(BaseModel):
         ):
             raise ValueError("created_from must not be later than created_to")
         return self
+
+
+class OperatorStatsQuery(StatsQuery):
+    sort_by: OperatorSortField = OperatorSortField.AVG_SCORE
+    order: SortOrder = SortOrder.DESC
+
+
+class ChecklistStatsQuery(StatsQuery):
+    sort_by: ChecklistSortField = ChecklistSortField.PASS_RATE
+    order: SortOrder = SortOrder.ASC

@@ -5,12 +5,14 @@ from decimal import Decimal
 from sqlalchemy import ColumnElement
 
 from app.core.permissions import can_manage_people
+from app.core.sorting import SortOrder
 from app.exceptions import EntityNotFound, PermissionDenied
 from app.models.calls import Call, CallStatus
 from app.models.users import User
 from app.repositories.call import CallRepository
 from app.repositories.scope import visible_operators
 from app.repositories.user import UserRepository
+from app.schemas.input.call_filters import CallSortField
 from app.services.base_service import BaseService
 from app.utils.storage import save_audio
 from app.workers.tasks import process_call
@@ -58,6 +60,8 @@ class CallService(BaseService[Call, CallRepository]):
         limit: int = 20,
         offset: int = 0,
         scope: ColumnElement[bool] | None = None,
+        sort_by: CallSortField = CallSortField.CREATED_AT,
+        order: SortOrder = SortOrder.DESC,
     ) -> tuple[Sequence[Call], int]:
         return await self.repo.list_calls(
             operator_id=operator_id,
@@ -69,6 +73,8 @@ class CallService(BaseService[Call, CallRepository]):
             limit=limit,
             offset=offset,
             scope=scope,
+            sort_by=sort_by,
+            order=order,
         )
 
     async def get_report(
