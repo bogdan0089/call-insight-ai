@@ -36,3 +36,12 @@ class InvalidVerificationToken(AppException):
 class NotAuthenticated(AppException):
     def __init__(self, reason: str = "Authentication required") -> None:
         super().__init__(message=reason, http_status_code=401)
+
+
+class PermissionDenied(AppException):
+    def __init__(self, action: str | None = None) -> None:
+        super().__init__(
+            message="Not enough permissions",
+            info={"action": action} if action else {},
+            http_status_code=403,
+        )

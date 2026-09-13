@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 
+from sqlalchemy import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exceptions import EntityNotFound
@@ -32,7 +33,12 @@ class EmbeddingService:
         await self.session.commit()
         return transcript
 
-    async def find_similar_calls(self, call_id: int, limit: int = 5) -> list[SimilarCall]:
+    async def find_similar_calls(
+        self,
+        call_id: int,
+        limit: int = 5,
+        scope: ColumnElement[bool] | None = None,
+    ) -> list[SimilarCall]:
         transcript = await self.transcripts.get_by_call_id(call_id)
         if transcript is None:
             raise EntityNotFound(entity="Transcript", call_id=call_id)
@@ -44,10 +50,16 @@ class EmbeddingService:
             embedding_model=transcript.embedding_model or self.embedder.model_name,
             exclude_call_id=call_id,
             limit=limit,
+            scope=scope,
         )
         return self._to_similar(rows)
 
-    async def find_examples(self, call_id: int, limit: int = 3) -> list[ScoredExample]:
+    async def find_examples(
+        self,
+        call_id: int,
+        organization_id: int | None,
+        limit: int = 3,
+    ) -> list[ScoredExample]:
         transcript = await self.transcripts.get_by_call_id(call_id)
         if transcript is None or transcript.embedding is None:
             return []
@@ -55,6 +67,7 @@ class EmbeddingService:
         rows = await self.transcripts.find_similar_scored(
             embedding=transcript.embedding,
             embedding_model=transcript.embedding_model or self.embedder.model_name,
+            organization_id=organization_id,
             exclude_call_id=call_id,
             limit=limit,
         )
@@ -73,13 +86,19 @@ class EmbeddingService:
             for found, distance in rows
         ]
 
-    async def search_calls(self, query: str, limit: int = 5) -> list[SimilarCall]:
+    async def search_calls(
+        self,
+        query: str,
+        limit: int = 5,
+        scope: ColumnElement[bool] | None = None,
+    ) -> list[SimilarCall]:
         embedding = await self.embedder.embed(query)
 
         rows = await self.transcripts.find_similar(
             embedding=embedding,
             embedding_model=self.embedder.model_name,
             limit=limit,
+            scope=scope,
         )
         return self._to_similar(rows)
 

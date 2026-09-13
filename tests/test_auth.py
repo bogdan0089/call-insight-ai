@@ -41,6 +41,7 @@ async def register(
     client: httpx.AsyncClient,
     email: str,
     password: str = "secret123",
+    organization_name: str = "Тестова компанія",
 ):
     return await client.post(
         "/auth/register",
@@ -49,6 +50,7 @@ async def register(
             "password": password,
             "first_name": "Тест",
             "last_name": "Користувач",
+            "organization_name": organization_name,
         },
     )
 
@@ -149,8 +151,9 @@ async def test_me_returns_the_signed_in_user(
 
     assert response.status_code == 200
     body = response.json()
-    assert body["email"] == email
-    assert body["role"] == "operator"
+    assert body["user"]["email"] == email
+    assert body["user"]["role"] == "owner"
+    assert body["organization"]["name"] == "Тестова компанія"
 
 
 @pytest.mark.asyncio

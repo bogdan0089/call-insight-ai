@@ -5,6 +5,8 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from app.core.limits import (
     NAME_MAX,
     NAME_MIN,
+    ORG_NAME_MAX,
+    ORG_NAME_MIN,
     PASSWORD_MAX,
     PASSWORD_MIN,
     VERIFICATION_TOKEN_MAX,
@@ -19,6 +21,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=PASSWORD_MIN, max_length=PASSWORD_MAX)
     first_name: str = Field(min_length=NAME_MIN, max_length=NAME_MAX)
     last_name: str = Field(min_length=NAME_MIN, max_length=NAME_MAX)
+    organization_name: str = Field(min_length=ORG_NAME_MIN, max_length=ORG_NAME_MAX)
 
     @field_validator("password")
     @classmethod
@@ -27,7 +30,7 @@ class RegisterRequest(BaseModel):
             raise ValueError("password must contain a letter and a digit")
         return value
 
-    @field_validator("first_name", "last_name")
+    @field_validator("first_name", "last_name", "organization_name")
     @classmethod
     def strip_name(cls, value: str) -> str:
         cleaned = value.strip()
@@ -49,3 +52,4 @@ class VerifyRequest(BaseModel):
 
 class ResendRequest(BaseModel):
     email: EmailStr
+

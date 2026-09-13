@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.stats import StatsRepository
@@ -13,11 +14,15 @@ class StatsService:
 
     async def operators(
         self,
+        call_scope: ColumnElement[bool] | None,
+        operator_scope: ColumnElement[bool] | None,
         operator_id: int | None = None,
         created_from: datetime | None = None,
         created_to: datetime | None = None,
     ) -> list[OperatorStats]:
         rows = await self.repo.operators(
+            call_scope=call_scope,
+            operator_scope=operator_scope,
             operator_id=operator_id,
             created_from=created_from,
             created_to=created_to,
@@ -38,11 +43,13 @@ class StatsService:
 
     async def checklist(
         self,
+        call_scope: ColumnElement[bool] | None,
         operator_id: int | None = None,
         created_from: datetime | None = None,
         created_to: datetime | None = None,
     ) -> list[ChecklistStats]:
         rows = await self.repo.checklist(
+            call_scope=call_scope,
             operator_id=operator_id,
             created_from=created_from,
             created_to=created_to,

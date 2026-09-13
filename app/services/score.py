@@ -1,3 +1,5 @@
+from sqlalchemy import ColumnElement
+
 from app.exceptions import EntityNotFound
 from app.models.scores import CallScore
 from app.repositories.score import CallScoreRepository
@@ -12,8 +14,11 @@ class CallScoreService(BaseService[CallScore, CallScoreRepository]):
         call_id: int,
         score_id: int,
         is_verified: bool,
+        scope: ColumnElement[bool] | None = None,
     ) -> CallScore:
-        score = await self.repo.get_for_call(call_id=call_id, score_id=score_id)
+        score = await self.repo.get_for_call(
+            call_id=call_id, score_id=score_id, scope=scope
+        )
         if score is None:
             raise EntityNotFound(entity=self.entity_name, id=score_id)
 

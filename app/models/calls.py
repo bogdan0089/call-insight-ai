@@ -10,6 +10,7 @@ from app.core.db import Base
 
 if TYPE_CHECKING:
     from app.models.ai_raw import RawAIResponse
+    from app.models.organizations import Organization
     from app.models.scores import CallScore
     from app.models.transcripts import Transcript
     from app.models.users import User
@@ -28,10 +29,15 @@ class Call(Base):
     __tablename__ = "calls"
     __table_args__ = (
         Index("ix_calls_operator_created", "operator_id", "created_at", "id"),
+        Index("ix_calls_org_created", "organization_id", "created_at", "id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     external_id: Mapped[str | None] = mapped_column(String(128), unique=True, index=True)
+    organization_id: Mapped[int | None] = mapped_column(
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        default=None,
+    )
     operator_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"),
         index=True
@@ -60,6 +66,7 @@ class Call(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+    organization: Mapped["Organization | None"] = relationship(back_populates="calls")
     operator: Mapped["User | None"] = relationship(back_populates="calls")
 
     transcript: Mapped["Transcript | None"] = relationship(

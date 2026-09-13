@@ -8,7 +8,12 @@ from app.schemas.input.auth import (
     ResendRequest,
     VerifyRequest,
 )
-from app.schemas.output.user import TokenResponse, UserResponse
+from app.schemas.output.user import (
+    OrganizationOut,
+    ProfileResponse,
+    TokenResponse,
+    UserResponse,
+)
 from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -24,6 +29,7 @@ async def register(
         password=payload.password,
         first_name=payload.first_name,
         last_name=payload.last_name,
+        organization_name=payload.organization_name,
     )
     return {"detail": "Check your inbox to confirm the address"}
 
@@ -62,6 +68,15 @@ async def login(
     )
 
 
-@router.get("/me", response_model=UserResponse)
-async def me(user: User = Depends(get_current_user)) -> UserResponse:
-    return UserResponse.model_validate(user)
+@router.get("/me", response_model=ProfileResponse)
+async def me(
+    user: User = Depends(get_current_user),
+    service: AuthService = Depends(get_auth_service),
+) -> ProfileResponse:
+    user, organization = await service.profile(user)
+    return ProfileResponse(
+        user=UserResponse.model_validate(user),
+        organization=(
+            OrganizationOut.model_validate(organization) if organization else None
+        ),
+    )
