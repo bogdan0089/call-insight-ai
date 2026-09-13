@@ -4,11 +4,15 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import router as auth_router
 from app.api.calls import router as calls_router
 from app.api.stats import router as stats_router
 from app.core.config import settings
 from app.core.db import get_session
+from app.core.logging import configure_logging
 from app.exceptions import AppException
+
+configure_logging()
 
 app = FastAPI(title="Call Insight")
 
@@ -19,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(calls_router)
 app.include_router(stats_router)
 
@@ -27,7 +32,7 @@ app.include_router(stats_router)
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.http_status_code,
-        content={"detail": exc.message, "info": exc.info},
+        content={"detail": exc.message, "code": type(exc).__name__, "info": exc.info},
     )
 
 

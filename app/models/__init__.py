@@ -4,6 +4,7 @@ from app.models.checklist import ChecklistItem
 from app.models.scores import CallScore
 from app.models.transcripts import Speaker, Transcript, TranscriptSegment
 from app.models.users import User, UserRole
+from app.models.verification import EmailVerification
 
 __all__ = [
     "AIResponseKind",
@@ -11,6 +12,7 @@ __all__ = [
     "CallScore",
     "CallStatus",
     "ChecklistItem",
+    "EmailVerification",
     "RawAIResponse",
     "Speaker",
     "Transcript",

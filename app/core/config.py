@@ -31,5 +31,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-jwt-secret"
     jwt_ttl_minutes: int = 60
 
+    frontend_url: str = "http://localhost:3100"
+    email_verification_ttl_hours: int = 24
+
 
 settings = Settings()

@@ -1,3 +1,5 @@
+SEED_PASSWORD = "devpass123"
+
 USERS = [
     {
         "email": "nastia@example.com",
