@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AuthGate, AuthProvider } from "@/components/auth-provider";
 import { Nav } from "@/components/nav";
 import "./globals.css";
 
@@ -12,8 +13,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="uk">
       <body>
-        <Nav />
-        <main className="shell">{children}</main>
+        <AuthProvider>
+          <Nav />
+          <main className="shell">
+            <AuthGate>{children}</AuthGate>
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
