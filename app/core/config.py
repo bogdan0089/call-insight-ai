@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     jwt_ttl_minutes: int = 60
 
     frontend_url: str = "http://localhost:3100"
+
+    api_key_touch_seconds: int = 300
     email_verification_ttl_hours: int = 24
 
 

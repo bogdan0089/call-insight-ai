@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 PLATFORM_STAFF = frozenset({UserRole.SUPER_ADMIN})
 WHOLE_ORG = frozenset({UserRole.OWNER, UserRole.ADMIN})
 MANAGE_PEOPLE = frozenset({UserRole.OWNER, UserRole.ADMIN, UserRole.MANAGER})
+MANAGE_API_KEYS = frozenset({UserRole.OWNER})
 VERIFY_SCORES = frozenset({UserRole.OWNER, UserRole.ADMIN, UserRole.MANAGER})
 
 
@@ -23,6 +24,10 @@ def sees_whole_org(user: "User") -> bool:
 
 def can_manage_people(user: "User") -> bool:
     return user.role in MANAGE_PEOPLE
+
+
+def can_manage_api_keys(user: "User") -> bool:
+    return user.role in MANAGE_API_KEYS
 
 
 def can_verify_scores(user: "User") -> bool:

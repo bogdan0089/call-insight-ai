@@ -49,3 +49,11 @@ def new_verification_token() -> tuple[str, str]:
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def new_api_key(prefix_length: int) -> tuple[str, str, str]:
+    """Return (key, prefix, hash); only the prefix and hash are stored."""
+    secret = secrets.token_urlsafe(32)
+    prefix = secrets.token_hex(prefix_length // 2)
+    key = f"ci_{prefix}_{secret}"
+    return key, prefix, hash_token(key)

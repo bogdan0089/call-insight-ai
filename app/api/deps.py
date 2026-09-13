@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable
 
 from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,7 @@ from app.exceptions import AccountDisabled, NotAuthenticated, PermissionDenied
 from app.integrations.embeddings.client import build_embedder
 from app.integrations.mail.client import build_mailer
 from app.models.users import User
+from app.repositories.api_key import ApiKeyRepository
 from app.repositories.call import CallRepository
 from app.repositories.checklist import ChecklistRepository
 from app.repositories.organization import OrganizationRepository
@@ -19,6 +20,7 @@ from app.repositories.score import CallScoreRepository
 from app.repositories.stats import StatsRepository
 from app.repositories.user import UserRepository
 from app.repositories.verification import EmailVerificationRepository
+from app.services.api_key import ApiKeyService
 from app.services.auth import AuthService
 from app.services.call import CallService
 from app.services.embedding import EmbeddingService
@@ -74,13 +76,34 @@ def get_people_service(session: AsyncSession = Depends(get_session)) -> PeopleSe
     )
 
 
+def get_api_key_service(session: AsyncSession = Depends(get_session)) -> ApiKeyService:
+    return ApiKeyService(
+        session=session,
+        repo=ApiKeyRepository(session),
+        users=UserRepository(session),
+    )
+
+
 bearer = HTTPBearer(auto_error=False)
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+    api_key: str | None = Depends(api_key_header),
     session: AsyncSession = Depends(get_session),
 ) -> User:
+    if api_key:
+        service = ApiKeyService(
+            session=session,
+            repo=ApiKeyRepository(session),
+            users=UserRepository(session),
+        )
+        user = await service.authenticate(api_key)
+        if user is None:
+            raise NotAuthenticated("Invalid API key")
+        return user
+
     if credentials is None:
         raise NotAuthenticated
 
