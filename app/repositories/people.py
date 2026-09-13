@@ -5,8 +5,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 
 from app.exceptions import DatabaseError
+from app.models.organizations import ApiKey
 from app.models.users import User, UserRole
 from app.repositories.base_repository import SqlalchemyAsyncRepository
+
+
+def is_person() -> ColumnElement[bool]:
+    """Exclude service users that back API keys."""
+    return ~select(ApiKey.id).where(ApiKey.user_id == User.id).exists()
 
 
 class PeopleRepository(SqlalchemyAsyncRepository[User]):
@@ -21,7 +27,7 @@ class PeopleRepository(SqlalchemyAsyncRepository[User]):
         limit: int = 20,
         offset: int = 0,
     ) -> tuple[Sequence[User], int]:
-        conditions: list[ColumnElement[bool]] = []
+        conditions: list[ColumnElement[bool]] = [is_person()]
         if scope is not None:
             conditions.append(scope)
         if role is not None:
@@ -54,7 +60,7 @@ class PeopleRepository(SqlalchemyAsyncRepository[User]):
         user_id: int,
         scope: ColumnElement[bool] | None = None,
     ) -> User | None:
-        conditions: list[ColumnElement[bool]] = [User.id == user_id]
+        conditions: list[ColumnElement[bool]] = [User.id == user_id, is_person()]
         if scope is not None:
             conditions.append(scope)
 
