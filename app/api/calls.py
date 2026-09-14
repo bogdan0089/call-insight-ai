@@ -9,6 +9,7 @@ from app.api.deps import (
     get_score_service,
     require,
 )
+from app.core.limits import SEARCH_QUERY_MIN, SIMILAR_LIMIT_DEFAULT, SIMILAR_LIMIT_MAX
 from app.core.permissions import can_verify_scores
 from app.models.users import User
 from app.repositories.scope import visible_calls
@@ -63,8 +64,8 @@ async def list_calls(
 
 @router.get("/search", response_model=list[SimilarCall])
 async def search_calls(
-    q: str = Query(min_length=2, description="Semantic search over transcripts"),
-    limit: int = Query(default=5, ge=1, le=50),
+    q: str = Query(min_length=SEARCH_QUERY_MIN, description="Semantic search over transcripts"),
+    limit: int = Query(default=SIMILAR_LIMIT_DEFAULT, ge=1, le=SIMILAR_LIMIT_MAX),
     service: EmbeddingService = Depends(get_embedding_service),
     actor: User = Depends(get_current_user),
 ) -> list[SimilarCall]:
@@ -94,7 +95,7 @@ async def get_call_report(
 @router.get("/{call_id}/similar", response_model=list[SimilarCall])
 async def get_similar_calls(
     call_id: int,
-    limit: int = Query(default=5, ge=1, le=50),
+    limit: int = Query(default=SIMILAR_LIMIT_DEFAULT, ge=1, le=SIMILAR_LIMIT_MAX),
     service: EmbeddingService = Depends(get_embedding_service),
     actor: User = Depends(get_current_user),
 ) -> list[SimilarCall]:

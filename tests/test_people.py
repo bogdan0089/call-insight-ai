@@ -170,3 +170,15 @@ async def test_invited_person_sets_a_password_and_logs_in(
     assert accepted.json()["is_verified"] is True
     assert login.status_code == 200
     assert reused.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_overlong_invite_email_is_rejected(
+    client: httpx.AsyncClient,
+    owner: User,
+) -> None:
+    payload = {**new_person(), "email": f"{'a' * 60}@example.com"}
+
+    response = await client.post("/people", headers=auth_header(owner), json=payload)
+
+    assert response.status_code == 422

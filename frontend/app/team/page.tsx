@@ -20,7 +20,7 @@ import {
   type Role,
 } from "@/lib/api";
 import { fullDate } from "@/lib/format";
-import { NAME_MAX, PAGE_SIZE } from "@/lib/limits";
+import { EMAIL_MAX, NAME_MAX, PAGE_SIZE } from "@/lib/limits";
 import {
   INVITABLE_ROLES,
   ROLE_LABEL,
@@ -120,6 +120,7 @@ function InvitePanel({
           <input
             className="field"
             type="email"
+            maxLength={EMAIL_MAX}
             value={form.email}
             onChange={(event) => change("email", event.target.value)}
           />

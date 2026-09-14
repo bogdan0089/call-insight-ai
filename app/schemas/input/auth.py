@@ -3,6 +3,7 @@ import re
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.limits import (
+    EMAIL_MAX,
     NAME_MAX,
     NAME_MIN,
     ORG_NAME_MAX,
@@ -17,7 +18,7 @@ PASSWORD_RULE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).+$")
 
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(max_length=EMAIL_MAX)
     password: str = Field(min_length=PASSWORD_MIN, max_length=PASSWORD_MAX)
     first_name: str = Field(min_length=NAME_MIN, max_length=NAME_MAX)
     last_name: str = Field(min_length=NAME_MIN, max_length=NAME_MAX)
@@ -40,7 +41,7 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(max_length=EMAIL_MAX)
     password: str = Field(min_length=1, max_length=PASSWORD_MAX)
 
 
@@ -51,7 +52,7 @@ class VerifyRequest(BaseModel):
 
 
 class ResendRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(max_length=EMAIL_MAX)
 
 
 class AcceptInviteRequest(BaseModel):

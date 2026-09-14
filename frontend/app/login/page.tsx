@@ -6,7 +6,7 @@ import { Suspense, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { AuthCard, Button, Field, Notice } from "@/components/ui";
 import { ApiError, api } from "@/lib/api";
-import { PASSWORD_MAX } from "@/lib/limits";
+import { EMAIL_MAX, PASSWORD_MAX } from "@/lib/limits";
 import { safeNext } from "@/lib/redirect";
 
 function LoginForm() {
@@ -93,6 +93,7 @@ function LoginForm() {
             className="field"
             type="email"
             autoComplete="email"
+            maxLength={EMAIL_MAX}
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
