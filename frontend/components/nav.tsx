@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
 import type { Role } from "@/lib/api";
-import { ROLE_LABEL } from "@/lib/permissions";
+import { ROLE_LABEL, canManageApiKeys, canManagePeople } from "@/lib/permissions";
 import { color } from "@/lib/theme";
 
 interface NavLink {
@@ -16,6 +16,8 @@ interface NavLink {
 const LINKS: NavLink[] = [
   { href: "/", label: "Огляд", visible: () => true },
   { href: "/calls", label: "Дзвінки", visible: () => true },
+  { href: "/team", label: "Команда", visible: canManagePeople },
+  { href: "/keys", label: "Ключі API", visible: canManageApiKeys },
 ];
 
 function initials(first: string, last: string) {

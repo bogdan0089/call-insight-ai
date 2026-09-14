@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { useAuth, useProfile } from "@/components/auth-provider";
 import { Badge, Button, Card, CardTitle, Label } from "@/components/ui";
@@ -106,6 +107,13 @@ export default function CabinetPage() {
                 </li>
               ))}
             </ul>
+            {canManagePeople(user.role) ? (
+              <div style={{ padding: "0 20px 18px" }}>
+                <Link className="link" href="/team" style={{ fontSize: 13, fontWeight: 600 }}>
+                  Перейти до команди →
+                </Link>
+              </div>
+            ) : null}
           </Card>
         </div>
       </div>

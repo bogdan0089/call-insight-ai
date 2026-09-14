@@ -310,6 +310,17 @@ select.field:hover {
   color: var(--accent);
 }
 
+.secret {
+  font-family: var(--mono);
+  font-size: 13px;
+  word-break: break-all;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-inset);
+  border: 1px dashed var(--accent);
+  color: var(--text);
+}
+
 @media (max-width: 520px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -362,8 +373,19 @@ select.field[aria-invalid="true"] {
   border-color: var(--fail);
 }
 
+.grid-wide {
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  align-items: start;
+}
+
 .only-narrow {
   display: none;
+}
+
+@media (max-width: 1000px) {
+  .grid-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 720px) {

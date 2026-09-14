@@ -16,7 +16,7 @@ import { api, type Profile, type Role } from "@/lib/api";
 import { clearToken, getToken, onTokenChange, setToken } from "@/lib/auth";
 import { safeNext } from "@/lib/redirect";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/verify"];
+const PUBLIC_ROUTES = ["/login", "/register", "/verify", "/invite"];
 const GUEST_ONLY_ROUTES = ["/login", "/register"];
 
 type Status = "loading" | "anonymous" | "authenticated";
