@@ -15,6 +15,7 @@ interface NavLink {
 
 const LINKS: NavLink[] = [
   { href: "/", label: "Огляд", visible: () => true },
+  { href: "/calls", label: "Дзвінки", visible: () => true },
 ];
 
 function initials(first: string, last: string) {

@@ -123,6 +123,53 @@ export function Button({ tone = "neutral", children, style, ...rest }: ButtonPro
   );
 }
 
+export function Stat({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  tone?: Tone;
+}) {
+  return (
+    <Card style={{ padding: "16px 18px" }}>
+      <Label>{label}</Label>
+      <div
+        className="num"
+        style={{
+          marginTop: 8,
+          fontSize: 26,
+          fontWeight: 700,
+          lineHeight: 1.1,
+          color: TONES[tone].fg === color.textMuted ? color.text : TONES[tone].fg,
+        }}
+      >
+        {value}
+      </div>
+      {hint ? (
+        <div style={{ marginTop: 6, fontSize: 12, color: color.textDim }}>{hint}</div>
+      ) : null}
+    </Card>
+  );
+}
+
+export function Meter({ value, tone }: { value: number | null; tone: Tone }) {
+  return (
+    <div className="meter" title={value === null ? "немає оцінки" : `${value}`}>
+      <span
+        style={{
+          width: `${Math.max(0, Math.min(100, value ?? 0))}%`,
+          background: TONES[tone].fg,
+          opacity: value === null ? 0.15 : 1,
+        }}
+      />
+    </div>
+  );
+}
+
 export function Empty({ children }: { children: ReactNode }) {
   return (
     <div
@@ -153,6 +200,35 @@ export function Notice({ tone = "fail", children }: { tone?: Tone; children: Rea
     >
       {children}
     </div>
+  );
+}
+
+export function SortHeader<Field extends string>({
+  field,
+  label,
+  sortBy,
+  order,
+  onSort,
+  align = "left",
+}: {
+  field: Field;
+  label: string;
+  sortBy: Field;
+  order: "asc" | "desc";
+  onSort: (field: Field) => void;
+  align?: "left" | "right";
+}) {
+  const active = sortBy === field;
+  const arrow = active ? (order === "asc" ? "↑" : "↓") : "↕";
+  return (
+    <th style={{ textAlign: align }} aria-sort={active ? (order === "asc" ? "ascending" : "descending") : "none"}>
+      <button type="button" className="sort-head" data-active={active} onClick={() => onSort(field)}>
+        {label}
+        <span aria-hidden className="sort-arrow">
+          {arrow}
+        </span>
+      </button>
+    </th>
   );
 }
 

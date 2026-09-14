@@ -59,3 +59,10 @@ export const type = {
     fontWeight: 700,
   },
 } as const;
+
+export function scoreTone(score: number | null): "pass" | "warn" | "fail" | "neutral" {
+  if (score === null) return "neutral";
+  if (score >= 80) return "pass";
+  if (score >= 55) return "warn";
+  return "fail";
+}
