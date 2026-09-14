@@ -1,4 +1,5 @@
 export const NAME_MAX = 64;
+export const EMAIL_MAX = 64;
 export const ORG_NAME_MIN = 2;
 export const ORG_NAME_MAX = 128;
 export const PASSWORD_MIN = 8;

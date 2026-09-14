@@ -202,3 +202,21 @@ async def test_errors_carry_a_stable_code(
 
     assert unverified.json()["code"] == "EmailNotVerified"
     assert wrong.json()["code"] == "InvalidCredentials"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["/auth/register", "/auth/login", "/auth/resend"])
+async def test_overlong_email_is_rejected_before_the_database(
+    client: httpx.AsyncClient,
+    path: str,
+) -> None:
+    email = f"{'a' * 60}@example.com"
+    payload = {
+        "email": email,
+        "password": "secret123",
+        "first_name": "Тест",
+        "last_name": "Користувач",
+        "organization_name": "Тестова компанія",
+    }
+
+    assert (await client.post(path, json=payload)).status_code == 422

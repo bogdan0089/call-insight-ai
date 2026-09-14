@@ -5,7 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 import { AuthCard, Button, Field, Notice } from "@/components/ui";
 import { api } from "@/lib/api";
-import { NAME_MAX, ORG_NAME_MAX, ORG_NAME_MIN, PASSWORD_MAX, passwordProblem } from "@/lib/limits";
+import {
+  EMAIL_MAX,
+  NAME_MAX,
+  ORG_NAME_MAX,
+  ORG_NAME_MIN,
+  PASSWORD_MAX,
+  passwordProblem,
+} from "@/lib/limits";
 
 interface Form {
   organization_name: string;
@@ -164,6 +171,7 @@ function RegisterForm() {
             className="field"
             type="email"
             autoComplete="email"
+            maxLength={EMAIL_MAX}
             value={form.email}
             onChange={(event) => change("email", event.target.value)}
           />

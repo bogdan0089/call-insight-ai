@@ -153,3 +153,20 @@ async def test_stats_reject_reversed_date_range(auth_client: httpx.AsyncClient) 
     )
 
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("path", "params"),
+    [
+        ("/calls/search", {"q": "a"}),
+        ("/calls/search", {"q": "refund", "limit": 51}),
+        ("/calls/1/similar", {"limit": 0}),
+    ],
+)
+async def test_search_bounds_come_from_limits(
+    auth_client: httpx.AsyncClient,
+    path: str,
+    params: dict[str, object],
+) -> None:
+    assert (await auth_client.get(path, params=params)).status_code == 422

@@ -2,7 +2,13 @@ from enum import StrEnum
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.core.limits import NAME_MAX, NAME_MIN, PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX
+from app.core.limits import (
+    EMAIL_MAX,
+    NAME_MAX,
+    NAME_MIN,
+    PAGE_SIZE_DEFAULT,
+    PAGE_SIZE_MAX,
+)
 from app.core.sorting import SortOrder
 from app.models.users import UserRole
 
@@ -27,7 +33,7 @@ class PeopleQuery(BaseModel):
 
 
 class InviteRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(max_length=EMAIL_MAX)
     first_name: str = Field(min_length=NAME_MIN, max_length=NAME_MAX)
     last_name: str = Field(min_length=NAME_MIN, max_length=NAME_MAX)
     role: UserRole = UserRole.OPERATOR
