@@ -94,6 +94,57 @@ export interface CallFilters {
 }
 
 
+export type OperatorSortField =
+  | "operator_name"
+  | "calls_total"
+  | "calls_scored"
+  | "avg_score"
+  | "min_score"
+  | "max_score"
+  | "failed_required"
+  | "failed_required_rate";
+
+export type ChecklistSortField = "code" | "title" | "weight" | "scored" | "passed" | "pass_rate";
+
+export interface OperatorStats {
+  operator_id: number;
+  operator_name: string;
+  calls_total: number;
+  calls_scored: number;
+  avg_score: string | null;
+  min_score: string | null;
+  max_score: string | null;
+  failed_required: number;
+  failed_required_rate: number | null;
+}
+
+export interface DailyStats {
+  day: string;
+  calls_total: number;
+  calls_scored: number;
+  avg_score: string | null;
+  failed_required: number;
+}
+
+export interface ChecklistStats {
+  checklist_item_id: number;
+  code: string;
+  title: string;
+  weight: string;
+  is_required: boolean;
+  scored: number;
+  passed: number;
+  pass_rate: number | null;
+}
+
+interface StatsParams<Field> {
+  created_from?: string | null;
+  created_to?: string | null;
+  sort_by?: Field;
+  order?: SortOrder;
+}
+
+
 export interface User {
   id: number;
   email: string;
@@ -265,6 +316,15 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ is_verified: isVerified }),
     }),
+
+  operatorStats: (params: StatsParams<OperatorSortField> = {}) =>
+    request<OperatorStats[]>(`/stats/operators${query(params)}`),
+
+  checklistStats: (params: StatsParams<ChecklistSortField> = {}) =>
+    request<ChecklistStats[]>(`/stats/checklist${query(params)}`),
+
+  dailyStats: (params: { created_from?: string | null; created_to?: string | null } = {}) =>
+    request<DailyStats[]>(`/stats/daily${query(params)}`),
 
   listPeople: (params: PeopleParams = {}) => request<PeoplePage>(`/people${query(params)}`),
 };

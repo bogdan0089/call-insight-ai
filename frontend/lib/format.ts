@@ -9,6 +9,10 @@ export function score(value: string | number | null | undefined): string {
   return parsed === null ? "—" : parsed.toFixed(2);
 }
 
+export function percent(value: number | null | undefined): string {
+  return value === null || value === undefined ? "—" : `${Math.round(value * 100)}%`;
+}
+
 export function duration(seconds: number | null | undefined): string {
   if (seconds === null || seconds === undefined) return "—";
   const m = Math.floor(seconds / 60);
@@ -38,4 +42,8 @@ export function fullDate(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function isoDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
