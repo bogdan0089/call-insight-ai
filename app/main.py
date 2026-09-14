@@ -1,22 +1,45 @@
 from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.api_keys import router as api_keys_router
+from app.api.auth import router as auth_router
 from app.api.calls import router as calls_router
+from app.api.people import router as people_router
+from app.api.rate_limit import limit_by_ip
+from app.api.stats import router as stats_router
+from app.core.config import settings
 from app.core.db import get_session
+from app.core.logging import configure_logging
 from app.exceptions import AppException
 
-app = FastAPI(title="Call Insight")
+configure_logging()
 
+app = FastAPI(title="Call Insight", dependencies=[Depends(limit_by_ip("ip"))])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
+)
+
+app.include_router(auth_router)
 app.include_router(calls_router)
+app.include_router(people_router)
+app.include_router(api_keys_router)
+app.include_router(stats_router)
 
 
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.http_status_code,
-        content={"detail": exc.message, "info": exc.info},
+        content={"detail": exc.message, "code": type(exc).__name__, "info": exc.info},
+        headers=exc.headers,
     )
 
 

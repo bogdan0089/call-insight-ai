@@ -23,6 +23,14 @@ services:
       interval: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
