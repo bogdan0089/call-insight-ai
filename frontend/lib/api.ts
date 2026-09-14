@@ -208,6 +208,37 @@ export interface PeopleParams {
   order?: SortOrder;
 }
 
+export interface InvitePayload {
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: Role;
+  manager_id?: number | null;
+}
+
+export interface PersonPatch {
+  role?: Role;
+  manager_id?: number;
+  is_active?: boolean;
+}
+
+export interface ApiKey {
+  id: number;
+  name: string;
+  prefix: string;
+  is_active: boolean;
+  last_used_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface ApiKeyCreated {
+  key: ApiKey;
+  secret: string;
+  warning: string;
+}
+
+
 export class ApiError extends Error {
   status: number;
   code: string | null;
@@ -302,6 +333,9 @@ export const api = {
 
   verify: (token: string) => request<User>("/auth/verify", post({ token })),
 
+  acceptInvite: (token: string, password: string) =>
+    request<User>("/auth/accept-invite", post({ token, password })),
+
   login: (email: string, password: string) =>
     request<TokenResponse>("/auth/login", post({ email, password })),
 
@@ -327,4 +361,15 @@ export const api = {
     request<DailyStats[]>(`/stats/daily${query(params)}`),
 
   listPeople: (params: PeopleParams = {}) => request<PeoplePage>(`/people${query(params)}`),
+
+  invitePerson: (payload: InvitePayload) => request<Person>("/people", post(payload)),
+
+  updatePerson: (personId: number, patch: PersonPatch) =>
+    request<Person>(`/people/${personId}`, { method: "PATCH", body: JSON.stringify(patch) }),
+
+  listApiKeys: () => request<ApiKey[]>("/api-keys"),
+
+  createApiKey: (name: string) => request<ApiKeyCreated>("/api-keys", post({ name })),
+
+  revokeApiKey: (keyId: number) => request<ApiKey>(`/api-keys/${keyId}`, { method: "DELETE" }),
 };
