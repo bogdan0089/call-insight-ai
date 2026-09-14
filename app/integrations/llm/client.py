@@ -86,7 +86,7 @@ class FakeAnalyzer:
             ItemVerdict(
                 code=item.code,
                 passed=item.code in self.passed_codes,
-                quote="фейкова цитата" if item.code in self.passed_codes else None,
+                quote="fake quote" if item.code in self.passed_codes else None,
                 confidence=1.0,
             )
             for item in items
