@@ -112,13 +112,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
+  const { status, profile } = useAuth();
   const pathname = usePathname();
 
   if (!isPublic(pathname) && status !== "authenticated") {
     return <Empty>Перевіряємо доступ…</Empty>;
   }
-  return <>{children}</>;
+  return (
+    <>
+      {profile?.is_demo && !isPublic(pathname) ? (
+        <div className="demo-banner">
+          Демо-режим: можна все переглядати, але зміни вимкнені.
+        </div>
+      ) : null}
+      {children}
+    </>
+  );
 }
 
 export function useAuth(): AuthContextValue {

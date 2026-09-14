@@ -166,6 +166,7 @@ export interface Organization {
 export interface Profile {
   user: User;
   organization: Organization | null;
+  is_demo: boolean;
 }
 
 export interface TokenResponse {
@@ -340,6 +341,8 @@ export const api = {
     request<TokenResponse>("/auth/login", post({ email, password })),
 
   me: () => request<Profile>("/auth/me"),
+
+  demo: () => request<TokenResponse>("/auth/demo", { method: "POST" }),
 
   listCalls: (filters: CallFilters = {}) => request<CallPage>(`/calls${query(filters)}`),
 

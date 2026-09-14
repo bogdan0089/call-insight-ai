@@ -19,6 +19,27 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [unverified, setUnverified] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
+
+  async function openDemo() {
+    setDemoBusy(true);
+    setError(null);
+    try {
+      const { access_token } = await api.demo();
+      await signIn(access_token);
+      router.replace("/");
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 404
+          ? "Демо зараз вимкнене"
+          : err instanceof Error
+            ? err.message
+            : "Не вдалося відкрити демо",
+      );
+    } finally {
+      setDemoBusy(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -99,6 +120,19 @@ function LoginForm() {
           {busy ? "Входимо…" : "Увійти"}
         </Button>
 
+        <div className="or-divider">
+          <span>або</span>
+        </div>
+
+        <Button
+          type="button"
+          onClick={openDemo}
+          disabled={demoBusy}
+          style={{ padding: "10px 14px" }}
+        >
+          {demoBusy ? "Відкриваємо…" : "Переглянути демо"}
+        </Button>
+        <p className="demo-hint">Без реєстрації. Заповнена компанія, лише перегляд.</p>
       </form>
     </AuthCard>
   );
