@@ -90,6 +90,8 @@ export default function CallReportPage() {
 
   const total = num(report.total_score);
   const passed = report.scores.filter((s) => s.passed).length;
+  const scored = report.scores.length > 0;
+  const failed = report.status === "failed";
 
   return (
     <>
@@ -121,13 +123,13 @@ export default function CallReportPage() {
         <Stat label="Бал" value={score(report.total_score)} tone={scoreTone(total)} hint="зі 100" />
         <Stat
           label="Пунктів пройдено"
-          value={`${passed}/${report.scores.length}`}
+          value={scored ? `${passed}/${report.scores.length}` : "—"}
           hint="за чеклістом"
         />
         <Stat
           label="Важливі пункти"
-          value={report.failed_required ? "провал" : "ок"}
-          tone={report.failed_required ? "fail" : "pass"}
+          value={!scored ? "—" : report.failed_required ? "провал" : "ок"}
+          tone={!scored ? "neutral" : report.failed_required ? "fail" : "pass"}
           hint="обовʼязкові до виконання"
         />
         <Stat
@@ -142,7 +144,7 @@ export default function CallReportPage() {
         <Card padded={false}>
           <CardTitle aside={<Label>{report.scores.length} пунктів</Label>}>Чекліст</CardTitle>
           {report.scores.length === 0 ? (
-            <Empty>Дзвінок ще не оцінено</Empty>
+            <Empty>{failed ? "Обробка не завершилась" : "Дзвінок ще не оцінено"}</Empty>
           ) : (
             <div style={{ padding: "6px 20px 16px" }}>
               {report.scores.map((item) => (
@@ -163,7 +165,11 @@ export default function CallReportPage() {
           <CardTitle aside={<Label>{report.segments.length} реплік</Label>}>Стенограма</CardTitle>
           {report.segments.length === 0 ? (
             <Empty>
-              {report.transcript_text ? "Розшифровка без поділу на репліки" : "Розшифровки ще немає"}
+              {report.transcript_text
+                ? "Розшифровка без поділу на репліки"
+                : failed
+                  ? "Розшифровки немає"
+                  : "Розшифровки ще немає"}
             </Empty>
           ) : (
             <div style={{ padding: "6px 20px 16px" }}>

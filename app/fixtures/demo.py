@@ -170,7 +170,7 @@ async def build_call(
         audio_path=f"demo/{external_id}.mp3",
         duration_sec=len(segments) * SEGMENT_MS // 1000,
         created_at=created,
-        error="Whisper: timeout" if status is CallStatus.FAILED else None,
+        error="Transcription timed out" if status is CallStatus.FAILED else None,
     )
     session.add(call)
     await session.flush()
