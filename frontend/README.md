@@ -23,8 +23,8 @@ frontend origin through `CORS_ORIGINS` in the backend `.env`; the default is `ht
 ## Demo
 
 With `DEMO_ENABLED=true` on the backend and demo data seeded
-(`python -m app.fixtures.demo demo --create "Demo Company" --login`), the login page shows
-"View demo". It opens a filled company in read-only mode without registration.
+(`python -m app.fixtures.demo demo --create "Demo Company" --login`), the login page shows a
+demo button. It opens a filled company in read-only mode without registration.
 
 ## Structure
 
