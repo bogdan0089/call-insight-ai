@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 import httpx
 import pytest
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.db import async_session
@@ -124,3 +125,31 @@ async def test_regular_users_are_not_restricted(
     )
 
     assert response.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_demo_team_cannot_log_in_with_the_seed_password(
+    client: httpx.AsyncClient,
+) -> None:
+    from app.fixtures.demo import ensure_team
+    from app.fixtures.users import SEED_PASSWORD
+    from app.models.organizations import Organization
+
+    owner = await make_org_user(UserRole.OWNER)
+    async with async_session() as session:
+        organization = await session.get(Organization, owner.organization_id)
+        await ensure_team(session, organization)
+        await session.commit()
+        team = await session.execute(
+            select(User.email).where(
+                User.organization_id == organization.id, User.id != owner.id
+            )
+        )
+        emails = list(team.scalars())
+
+    assert len(emails) == 4
+    for email in emails:
+        response = await client.post(
+            "/auth/login", json={"email": email, "password": SEED_PASSWORD}
+        )
+        assert response.status_code == 401, email
