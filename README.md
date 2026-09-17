@@ -94,8 +94,11 @@ The whole stack runs from one compose file on a single small host:
 cp .env.example .env            # set JWT_SECRET, ANTHROPIC_API_KEY, CORS_ORIGINS,
                                 # NEXT_PUBLIC_API_URL and ENVIRONMENT=production
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
-docker compose exec api python -m app.fixtures.seed
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec api   python -m app.fixtures.demo demo --create "Demo Company" --login --calls 60
 ```
+
+Do not run `app.fixtures.seed` on a public host: it creates owner accounts with the
+password printed in this README. The demo account has no password and is read-only.
 
 The production overlay stops Postgres, Redis, RabbitMQ and mailpit from publishing
 host ports, binds the API and the frontend to loopback, and sets `restart: always`.
