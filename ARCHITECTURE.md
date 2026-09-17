@@ -163,5 +163,3 @@ Data migrations move existing rows into a default organization when tenancy was 
   cookie behind the Next server is the stronger option.
 - **No user cache**: every authenticated request loads the user by primary key, which keeps
   deactivation and role changes immediate.
-- `GROQ_API_KEY` and `TELEPHONY_WEBHOOK_SECRET` are reserved for speech-to-text and telephony
-  webhooks and are not used yet.
