@@ -86,6 +86,37 @@ The suite needs PostgreSQL with pgvector and Redis. CI runs linting, migration c
 (single head, `alembic check`, downgrade to base and back) and tests for the backend, and lint,
 type checking and a production build for the frontend.
 
+## Deployment
+
+The whole stack runs from one compose file on a single small host:
+
+```bash
+cp .env.example .env            # set JWT_SECRET, ANTHROPIC_API_KEY, CORS_ORIGINS,
+                                # NEXT_PUBLIC_API_URL and ENVIRONMENT=production
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+docker compose exec api python -m app.fixtures.seed
+```
+
+The production overlay stops Postgres, Redis, RabbitMQ and mailpit from publishing
+host ports, binds the API and the frontend to loopback, and sets `restart: always`.
+Nothing is reachable from the internet except through a TLS proxy on the host:
+
+```caddy
+insight.example.org {
+    reverse_proxy 127.0.0.1:3100
+}
+
+insight-api.example.org {
+    reverse_proxy 127.0.0.1:8090
+}
+```
+
+Two settings must agree or the browser will be blocked by CORS: `NEXT_PUBLIC_API_URL`
+(build argument of the frontend image, so changing it means rebuilding) must be the
+API address above, and `CORS_ORIGINS` must contain the frontend address.
+
+`ENVIRONMENT=production` refuses to start on the default `JWT_SECRET`.
+
 ## Project layout
 
 ```

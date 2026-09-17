@@ -1,0 +1,47 @@
+# Production overlay. Applied on top of docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+#
+# It changes three things and nothing else:
+#   1. Postgres, Redis, RabbitMQ and mailpit stop publishing host ports. In the
+#      base file they are exposed so a developer can attach psql or open the
+#      management UI; on a public host that is an open database and an open
+#      broker.
+#   2. api and frontend bind to loopback only, behind the TLS proxy on the host.
+#   3. `restart: always`, so a reboot brings the stack back without anyone
+#      logging in.
+#
+# The images are identical -- what differs is the .env beside them.
+
+services:
+  postgres:
+    ports: !reset []
+    restart: always
+
+  redis:
+    ports: !reset []
+    restart: always
+
+  rabbitmq:
+    ports: !reset []
+    restart: always
+
+  mailpit:
+    ports: !reset []
+    restart: always
+
+  api:
+    restart: always
+    # `!override`, not a plain list: compose *appends* port mappings when it
+    # merges files, so without it the public 8090 from the base file would stay
+    # bound alongside the loopback one and this section would be theatre.
+    ports: !override
+      - "127.0.0.1:${API_EXTERNAL_PORT:-8090}:8000"
+
+  worker:
+    restart: always
+
+  frontend:
+    restart: always
+    ports: !override
+      - "127.0.0.1:${FRONTEND_EXTERNAL_PORT:-3100}:3100"

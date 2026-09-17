@@ -86,6 +86,24 @@ services:
         condition: service_healthy
     command: celery -A app.workers.celery_app worker --loglevel=info
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the browser bundle at build time, so it must be the
+        # address the browser uses -- not an internal compose hostname.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8090}
+    ports:
+      - "${FRONTEND_EXTERNAL_PORT:-3100}:3100"
+    depends_on:
+      api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3100/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pgdata:
   audio:
