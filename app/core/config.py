@@ -1,4 +1,7 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEV_JWT_SECRET = "dev-jwt-secret"
 
 
 class Settings(BaseSettings):
@@ -25,7 +28,8 @@ class Settings(BaseSettings):
     llm_input_price_per_mtok: float = 5.0
     llm_output_price_per_mtok: float = 25.0
 
-    jwt_secret: str = "dev-jwt-secret"
+    environment: str = "local"
+    jwt_secret: str = DEV_JWT_SECRET
     jwt_ttl_minutes: int = 60
 
     frontend_url: str = "http://localhost:3100"
@@ -64,6 +68,12 @@ class Settings(BaseSettings):
     mail_async: bool = True
 
     mail_dir: str = "storage/mail"
+
+    @model_validator(mode="after")
+    def refuse_dev_secret_in_production(self) -> "Settings":
+        if self.environment == "production" and self.jwt_secret == DEV_JWT_SECRET:
+            raise ValueError("ENVIRONMENT=production requires its own JWT_SECRET")
+        return self
 
 
 settings = Settings()
