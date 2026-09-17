@@ -2,15 +2,15 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: lab
-      POSTGRES_PASSWORD: lab
-      POSTGRES_DB: radar
+      POSTGRES_USER: insight
+      POSTGRES_PASSWORD: insight
+      POSTGRES_DB: call_insight
     ports:
       - "5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lab -d radar"]
+      test: ["CMD-SHELL", "pg_isready -U insight -d call_insight"]
       interval: 5s
       retries: 10
 
@@ -37,8 +37,8 @@ services:
       - "5673:5672"
       - "15673:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: lab
-      RABBITMQ_DEFAULT_PASS: lab
+      RABBITMQ_DEFAULT_USER: insight
+      RABBITMQ_DEFAULT_PASS: insight
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -48,10 +48,13 @@ services:
     build: .
     ports:
       - "8090:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      DATABASE_URL: postgresql+asyncpg://lab:lab@postgres:5432/radar
+      DATABASE_URL: postgresql+asyncpg://insight:insight@postgres:5432/call_insight
       REDIS_URL: redis://redis:6379/0
-      RABBITMQ_URL: amqp://lab:lab@rabbitmq:5672//
+      RABBITMQ_URL: amqp://insight:insight@rabbitmq:5672//
       STORAGE_DIR: /app/storage
     volumes:
       - audio:/app/storage
@@ -66,10 +69,13 @@ services:
 
   worker:
     build: .
+    env_file:
+      - path: .env
+        required: false
     environment:
-      DATABASE_URL: postgresql+asyncpg://lab:lab@postgres:5432/radar
+      DATABASE_URL: postgresql+asyncpg://insight:insight@postgres:5432/call_insight
       REDIS_URL: redis://redis:6379/0
-      RABBITMQ_URL: amqp://lab:lab@rabbitmq:5672//
+      RABBITMQ_URL: amqp://insight:insight@rabbitmq:5672//
       STORAGE_DIR: /app/storage
     volumes:
       - audio:/app/storage
