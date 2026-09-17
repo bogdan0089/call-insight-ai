@@ -10,10 +10,8 @@ from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.core.db import async_session, engine
-from app.core.security import hash_password
 from app.fixtures.checklist import CHECKLIST
 from app.fixtures.dialogues import DIALOGUES
-from app.fixtures.users import SEED_PASSWORD
 from app.integrations.embeddings.client import build_embedder
 from app.models.calls import Call, CallStatus
 from app.models.checklist import ChecklistItem
@@ -67,7 +65,7 @@ async def ensure_checklist(session, organization: Organization) -> list[Checklis
 
 
 async def ensure_team(session, organization: Organization) -> list[tuple[User, float]]:
-    """Create demo operators and a manager if missing."""
+    """Create demo operators and a manager if missing, without a usable password."""
     people: list[tuple[User, float]] = []
     manager: User | None = None
 
@@ -79,7 +77,7 @@ async def ensure_team(session, organization: Organization) -> list[tuple[User, f
         if user is None:
             user = User(
                 email=email,
-                hashed_password=hash_password(SEED_PASSWORD),
+                hashed_password="",
                 first_name=first,
                 last_name=last,
                 role=role,
@@ -308,7 +306,6 @@ async def fill(
     print(f"Operators: {', '.join(user.full_name for user, _ in team)}")
     print(f"Checklist items: {len(items)}")
     print(f"Calls: {before.scalar_one()} -> {after.scalar_one()}")
-    print(f"Password for created users: {SEED_PASSWORD}")
 
     await engine.dispose()
 
