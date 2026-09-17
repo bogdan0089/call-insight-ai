@@ -15,7 +15,6 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3100"]
 
-    groq_api_key: str = ""
     anthropic_api_key: str = ""
     voyage_api_key: str = ""
 
@@ -25,8 +24,6 @@ class Settings(BaseSettings):
     llm_max_retries: int = 3
     llm_input_price_per_mtok: float = 5.0
     llm_output_price_per_mtok: float = 25.0
-
-    telephony_webhook_secret: str = "dev-secret"
 
     jwt_secret: str = "dev-jwt-secret"
     jwt_ttl_minutes: int = 60
