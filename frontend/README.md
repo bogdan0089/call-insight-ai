@@ -20,6 +20,10 @@ python -m uvicorn app.main:app --port 8090
 The API address comes from `NEXT_PUBLIC_API_URL` (see `.env.example`). The API must allow the
 frontend origin through `CORS_ORIGINS` in the backend `.env`; the default is `http://localhost:3100`.
 
+In production the frontend runs from its own image (`frontend/Dockerfile`, Next in standalone
+mode) as the `frontend` service of the root compose file — see Deployment in the root README.
+`NEXT_PUBLIC_API_URL` is a build argument there, because Next inlines it into the bundle.
+
 ## Demo
 
 With `DEMO_ENABLED=true` on the backend and demo data seeded
