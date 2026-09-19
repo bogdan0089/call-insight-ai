@@ -1,9 +1,19 @@
 # call insight
 
-Quality control for sales calls. A call is transcribed, checked against the company checklist by
+Quality control for sales calls. A call's transcript is checked against the company checklist by
 an LLM, scored, and every verdict comes with a quote from the conversation as evidence. Managers
 see scores per operator, checklist item and day, confirm verdicts, and similar calls with
 human-confirmed scores are fed back to the model as examples.
+
+**▶ Live demo:** https://call.bondanweb.duckdns.org — press *Переглянути демо* for a read-only
+company with a month of scored calls, no sign-up. The demo runs without a paid LLM key, so its
+scores come from the deterministic analyzer described below; the interface is in Ukrainian.
+
+| Quality overview | One call: verdicts with quotes |
+|---|---|
+| ![Overview](docs/screenshots/overview.png) | ![Call detail](docs/screenshots/call-detail.png) |
+
+Speech-to-text is not integrated yet — transcripts come from prepared dialogues (see Roadmap).
 
 Multi-tenant: every company has its own team, checklist, calls and API keys, and each role sees
 only what it is allowed to.
