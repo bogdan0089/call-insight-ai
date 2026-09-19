@@ -1,7 +1,7 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEV_JWT_SECRET = "dev-jwt-secret"
+DEV_JWT_SECRET = "dev-jwt-secret-for-local-development-only"
 
 
 class Settings(BaseSettings):
